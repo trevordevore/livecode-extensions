@@ -1,0 +1,32 @@
+import module com.livecode.extensions.trevordevore.urlParser
+  use com.livecode.byte
+  use com.livecode.char
+  use com.livecode.list
+  use com.livecode.arithmetic
+  use com.livecode.binary
+  use com.livecode.string
+  use com.livecode.array
+  use com.livecode.type
+  use com.livecode.logic
+  use com.livecode.engine
+  use com.livecode.typeconvert
+  handler urlParse(in pURL as String) returns Array
+  handler urlGetBaseURL(in pURL as String) returns String
+  handler urlGetPassword(in pURL as String) returns String
+  handler urlSetPassword(in pURL as String, in pPassword as String) returns String
+  handler urlGetUsername(in pURL as String) returns String
+  handler urlSetUsername(in pURL as String, in pPassword as String) returns String
+  handler urlGetFragment(in pURL as String) returns String
+  handler urlSetFragment(in pURL as String, in pPassword as String) returns String
+  handler urlGetQueryString(in pURL as String) returns String
+  handler urlGetQueryStringAsArray(in pURL as String) returns Array
+  handler urlSetQueryString(in pURL as String, in pQueryString as Array) returns String
+  handler urlGetPath(in pURL as String) returns String
+  handler urlSetPath(in pURL as String, in pPassword as String) returns String
+  handler urlGetPort(in pURL as String) returns String
+  handler urlSetPort(in pURL as String, in pPort as Number) returns String
+  handler urlGetHost(in pURL as String) returns String
+  handler urlSetHost(in pURL as String, in pPassword as String) returns String
+  handler urlGetScheme(in pURL as String) returns String
+  handler urlSetScheme(in pURL as String, in pPassword as String) returns String
+end module
