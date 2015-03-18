@@ -1,1 +1,394 @@
-library com.livecode.extensions.trevordevore.urlParser	use com.livecode.engine	metadata title is "URL Parser"	metadata author is "Trevor DeVore"	metadata version is "0.1.0"		/*	Summary:		Parses a URL into its component parts.	Target:			A url.	output:			An array with the component parts. path, port, username, password, fragment, query string, scheme.	*/	public handler urlParse (in pURL as String) returns Array		return ParseURL(pURL)	end handler			/*	Summary:		Returns the base URL of a URL.	Target:			A url.	output:			The base url (excludes the query string and fragment).	*/	public handler urlGetBaseURL (in pURL as String) returns String		variable tOffset as Number				put the first offset of "?" in pURL into tOffset		if tOffset > 0 then			put char 1 to tOffset-1 of pURL into pURL		end if				put the first offset of "#" in pURL into tOffset		if tOffset > 0 then			put char 1 to tOffset-1 of pURL into pURL		end if				return pURL	end handler		/*	Summary:		Returns the password portion of a URL.	Target:			A url.	output:			The password portion of a URL.	*/	public handler urlGetPassword (in pURL as String) returns String		variable tMatches as Array				put ParseURL(pURL) into tMatches		return tMatches["password"]	end handler			public handler urlSetPassword (in pURL as String, in pPassword as String) returns String		variable tMatches as Array				put ParseURL(pURL) into tMatches		put pPassword into tMatches["password"]		return BuildURL(tMatches)	end handler			public handler urlGetUsername (in pURL as String) returns String		variable tMatches as Array				put ParseURL(pURL) into tMatches		return tMatches["username"]	end handler			public handler urlSetUsername (in pURL as String, in pUsername as String) returns String		variable tMatches as Array				put ParseURL(pURL) into tMatches		put pUsername into tMatches["username"]		return BuildURL(tMatches)	end handler			public handler urlGetFragment (in pURL as String) returns String		variable tMatches as Array				put ParseURL(pURL) into tMatches		return tMatches["fragment"]	end handler			public handler urlSetFragment (in pURL as String, in pFragment as String) returns String		variable tMatches as Array				put ParseURL(pURL) into tMatches		put pFragment into tMatches["fragment"]		return BuildURL(tMatches)	end handler			public handler urlGetQueryString (in pURL as String) returns String		variable tMatches as Array				put ParseURL(pURL) into tMatches		return tMatches["query string"]	end handler		public handler urlGetQueryStringAsArray (in pURL as String) returns Array		variable tMatches as Array				put ParseURL(pURL) into tMatches		--if pDecode then			variable tArray as Array			put SplitStringIntoArray(tMatches["query string"], "&", "=") into tArray			return URLDecodeArray(tArray)		--else			--return SplitStringIntoArray(tMatches["query string"], "&", "=")		--end if	end handler		/*		*/	public handler urlSetQueryString (in pURL as String, in pQueryString as Array) returns String -- want 'as any' here		variable tMatches as Array				put ParseURL(pURL) into tMatches		if pQueryString is an array then			put CombineArrayIntoString(URLEncodeArray(pQueryString), "&", "=") into tMatches["query string"]		else			put pQueryString into tMatches["query string"]		end if		return BuildURL(tMatches)	end handler			public handler urlGetPath (in pURL as String) returns String		variable tMatches as Array				put ParseURL(pURL) into tMatches		return tMatches["path"]	end handler			public handler urlSetPath (in pURL as String, in pPath as String) returns String		variable tMatches as Array				put ParseURL(pURL) into tMatches		put pPath into tMatches["path"]		return BuildURL(tMatches)	end handler			public handler urlGetPort (in pURL as String) returns String		variable tMatches as Array				put ParseURL(pURL) into tMatches		return tMatches["port"]	end handler			public handler urlSetPort (in pURL as String, in pPort as Integer) returns String		variable tMatches as Array				put ParseURL(pURL) into tMatches		put pPort formatted as string into tMatches["port"]		return BuildURL(tMatches)	end handler			public handler urlGetHost (in pURL as String) returns String		variable tMatches as Array				put ParseURL(pURL) into tMatches		return tMatches["host"]	end handler			public handler urlSetHost (in pURL as String, in pHost as String) returns String		variable tMatches as Array				put ParseURL(pURL) into tMatches		put pHost into tMatches["host"]		return BuildURL(tMatches)	end handler			public handler urlGetScheme (in pURL as String) returns String		variable tMatches as Array				put ParseURL(pURL) into tMatches		return tMatches["scheme"]	end handler			public handler urlSetScheme (in pURL as String, in pScheme as String) returns String		variable tMatches as Array				put ParseURL(pURL) into tMatches		put pScheme into tMatches["scheme"]		return BuildURL(tMatches)	end handler			/*	Summary:   Builds a URL from a URL array.	Target:    A url.	output:    A url string.	*/	private handler BuildURL(in pParts as Array) returns String		variable tURL as String				put pParts["scheme"] & "://" into tURL				if pParts["username"] is not empty then			put pParts["username"] after tURL		end if				if pParts["password"] is not empty then			put ":" & pParts["password"] after tURL		end if				if pParts["username"] is not empty or pParts["password"] is not empty then			put "@" after tURL		end if				put pParts["host"] after tURL				if pParts["port"] is not empty then			put ":" & pParts["port"] after tURL		end if				if pParts["path"] is not empty then			put pParts["path"] after tURL		end if				if pParts["query string"] is not empty then			put "?" & pParts["query string"] after tURL		end if				if pParts["fragment"] is not empty then			put "#" & pParts["fragment"] after tURL		end if				return tURL	end handler			private handler ParseURL (in pURL as String) returns Array				-- Notes:		-- This wont' properly parse a string like:		-- http://www.test.com?query=str		-- But is that even valid?		-- 		-- Scheme names consist of a sequence of characters beginning with a		-- letter and followed by any combination of letters, digits, plus		-- ("+"), period ("."), or hyphen ("-")		-- ?: (1) turns off capture for the "scheme://" pattern		-- ?: (2) turns off capture for the "username:password" pattern					variable tRegex as String		put "(?#scheme)(?:^([a-zA-Z][a-zA-Z0-9\\+\\.-]*)://)?(?#username-pasword)(?:([^/:]+[:@])?([^/:]+)@)?([^/:]*)?(?#port)(:[0-9]*[^/])*(?#path)(/[^?]*)*(?#query)(\\?[^#]*)*(?#fragment)(#.*)*" into tRegex             variable tScript as String    variable tMatches as Array        replace "\q" with "\q & quote & \q" in pURL        put "get matchText(\q" & pURL & "\q, \q" & tRegex & "\q, rScheme, rUsername, rPassword, rHost, rPort, rPath, rQueryString, rFragment);" into tScript    put "put rScheme into tA[\qscheme\q];put rUsername into tA[\qusername\q];put rPassword into tA[\qpassword\q];" after tScript    put "put rHost into tA[\qhost\q];put rPort into tA[\qport\q];put rPath into tA[\qpath\q];" after tScript    put "put rQueryString into tA[\qquery string\q];put rFragment into tA[\qfragment\q];return tA" after tScript    																-- Use 'execute script' for access to regular expressions.		execute script tScript		put the result into tMatches				-- if no password is provided then the pPassword match is actually username		if tMatches["username"] is empty and tMatches["password"] is not empty then			put tMatches["password"] into tMatches["username"]			put the empty string into tMatches["password"]		end if				-- The regex could possibly be updated to not include these characters but for now we strip them		if tMatches["password"] is not empty and char -1 of tMatches["password"] is "@" then			 put char 1 to -2 of tMatches["password"] into tMatches["password"]		end if		if tMatches["username"] is not empty and char -1 of tMatches["username"] is ":" then			put char 1 to -2 of tMatches["username"] into tMatches["username"]		end if		if tMatches["username"] is not empty and char -1 of tMatches["username"] is "@" then			put char 1 to -2 of tMatches["username"] into tMatches["username"]		end if		if tMatches["port"] is not empty and char 1 of tMatches["port"] is ":" then			put char 2 to -1 of tMatches["port"] into tMatches["port"]		end if		if tMatches["query string"] is not empty and char 1 of tMatches["query string"] is "?" then			put char 2 to -1 of tMatches["query string"] into tMatches["query string"]		end if		if tMatches["fragment"] is not empty and char 1 of tMatches["fragment"] is "#" then			put char 2 to -1 of tMatches["fragment"] into tMatches["fragment"]		end if				return tMatches	end handler		private handler DecodeURLString(in pString as String) returns String		-- RFC 1738 compliant		-- http://www.faqs.org/rfcs/rfc1738		replace "%20A" with "+" in pString		replace "%2A" with "*" in pString				variable tScript as String		put "get URLDecode(\q" & pString & "\q);return it" into tScript		execute script tScript		return the result	end handler		private handler EncodeURLString(in pString as String) returns String		-- RFC 1738 compliant		-- http://www.faqs.org/rfcs/rfc1738		variable tScript as String		put "get URLEncode(\q" & pString & "\q);return it" into tScript		execute script tScript				variable tString		put the result into tString		replace "+" with "%20" in tString		replace "*" with "%2A" in tString		return tString	end handler		private handler URLEncodeArray(in pArray as Array) returns Array		variable tResult as Array		variable tKey as String				put the empty array into tResult				repeat for each key tKey in pArray			put EncodeURLString(pArray[tKey]) into tResult[EncodeURLString(tKey)]		end repeat				return tResult	end handler		private handler URLDecodeArray(in pArray as Array) returns Array		variable tResult as Array		variable tKey as String				put the empty array into tResult				repeat for each key tKey in pArray			put DecodeURLString(pArray[tKey]) into tResult[DecodeURLString(tKey)]		end repeat				return tResult	end handler		private handler SplitStringIntoArray(in pString as String, in pKeyDel as String, in pValueDel as String) returns Array		variable tResult as Array		put the empty array into tResult		variable tKeyValue as String		split pString by pKeyDel				repeat for each element tKeyValue in the result			split tKeyValue by pValueDel			put element 2 of the result into tResult[element 1 of the result]		end repeat		return tResult	end handler			private handler CombineArrayIntoString(in pArray as Array, in pKeyDel as String, in pValueDel as String) returns String		variable tKey as String		variable tList as List		put [] into tList				repeat for each key tKey in pArray			push tKey & pValueDel & pArray[tKey] onto tList		end repeat				combine tList with pKeyDel		return the result	end handler	end library
+library community.livecode.trevordevore.urlParser
+
+	use com.livecode.engine
+
+	metadata title is "URL Parser"
+	metadata author is "Trevor DeVore"
+	metadata version is "0.1.0"
+	
+	/*
+	Summary:		Parses a URL into its component parts.
+	Target:			A url.
+	output:			An array with the component parts. path, port, username, password, fragment, query string, scheme.
+	*/
+	public handler urlParse (in pURL as String) returns Array
+		return ParseURL(pURL)
+	end handler
+	
+	
+	/*
+	Summary:		Returns the base URL of a URL.
+	Target:			A url.
+	output:			The base url (excludes the query string and fragment).
+	*/
+	public handler urlGetBaseURL (in pURL as String) returns String
+		variable tOffset as Number
+		
+		put the first offset of "?" in pURL into tOffset
+		if tOffset > 0 then
+			put char 1 to tOffset-1 of pURL into pURL
+		end if
+		
+		put the first offset of "#" in pURL into tOffset
+		if tOffset > 0 then
+			put char 1 to tOffset-1 of pURL into pURL
+		end if
+		
+		return pURL
+	end handler
+	
+	/*
+	Summary:		Returns the password portion of a URL.
+	Target:			A url.
+	output:			The password portion of a URL.
+	*/
+	public handler urlGetPassword (in pURL as String) returns String
+		variable tMatches as Array
+		
+		put ParseURL(pURL) into tMatches
+		return tMatches["password"]
+	end handler
+	
+	
+	public handler urlSetPassword (in pURL as String, in pPassword as String) returns String
+		variable tMatches as Array
+		
+		put ParseURL(pURL) into tMatches
+		put pPassword into tMatches["password"]
+
+		return BuildURL(tMatches)
+	end handler
+	
+	
+	public handler urlGetUsername (in pURL as String) returns String
+		variable tMatches as Array
+		
+		put ParseURL(pURL) into tMatches
+		return tMatches["username"]
+	end handler
+	
+	
+	public handler urlSetUsername (in pURL as String, in pUsername as String) returns String
+		variable tMatches as Array
+		
+		put ParseURL(pURL) into tMatches
+		put pUsername into tMatches["username"]
+
+		return BuildURL(tMatches)
+	end handler
+	
+	
+	public handler urlGetFragment (in pURL as String) returns String
+		variable tMatches as Array
+		
+		put ParseURL(pURL) into tMatches
+		return tMatches["fragment"]
+	end handler
+	
+	
+	public handler urlSetFragment (in pURL as String, in pFragment as String) returns String
+		variable tMatches as Array
+		
+		put ParseURL(pURL) into tMatches
+		put pFragment into tMatches["fragment"]
+
+		return BuildURL(tMatches)
+	end handler
+	
+	
+	public handler urlGetQueryString (in pURL as String) returns String
+		variable tMatches as Array
+		
+		put ParseURL(pURL) into tMatches
+		return tMatches["query string"]
+	end handler
+	
+	public handler urlGetQueryStringAsArray (in pURL as String) returns Array
+		variable tMatches as Array
+		
+		put ParseURL(pURL) into tMatches
+		--if pDecode then
+			variable tArray as Array
+			put SplitStringIntoArray(tMatches["query string"], "&", "=") into tArray
+			return URLDecodeArray(tArray)
+		--else
+			--return SplitStringIntoArray(tMatches["query string"], "&", "=")
+		--end if
+	end handler
+	
+	/*
+	
+	*/
+	public handler urlSetQueryString (in pURL as String, in pQueryString as Array) returns String -- want 'as any' here
+		variable tMatches as Array
+		
+		put ParseURL(pURL) into tMatches
+
+		if pQueryString is an array then
+			put CombineArrayIntoString(URLEncodeArray(pQueryString), "&", "=") into tMatches["query string"]
+		else
+			put pQueryString into tMatches["query string"]
+		end if
+
+		return BuildURL(tMatches)
+	end handler
+	
+	
+	public handler urlGetPath (in pURL as String) returns String
+		variable tMatches as Array
+		
+		put ParseURL(pURL) into tMatches
+		return tMatches["path"]
+	end handler
+	
+	
+	public handler urlSetPath (in pURL as String, in pPath as String) returns String
+		variable tMatches as Array
+		
+		put ParseURL(pURL) into tMatches
+		put pPath into tMatches["path"]
+
+		return BuildURL(tMatches)
+	end handler
+	
+	
+	public handler urlGetPort (in pURL as String) returns String
+		variable tMatches as Array
+		
+		put ParseURL(pURL) into tMatches
+		return tMatches["port"]
+	end handler
+	
+	
+	public handler urlSetPort (in pURL as String, in pPort as Integer) returns String
+		variable tMatches as Array
+		
+		put ParseURL(pURL) into tMatches
+		put pPort formatted as string into tMatches["port"]
+
+		return BuildURL(tMatches)
+	end handler
+	
+	
+	public handler urlGetHost (in pURL as String) returns String
+		variable tMatches as Array
+		
+		put ParseURL(pURL) into tMatches
+		return tMatches["host"]
+	end handler
+	
+	
+	public handler urlSetHost (in pURL as String, in pHost as String) returns String
+		variable tMatches as Array
+		
+		put ParseURL(pURL) into tMatches
+		put pHost into tMatches["host"]
+
+		return BuildURL(tMatches)
+	end handler
+	
+	
+	public handler urlGetScheme (in pURL as String) returns String
+		variable tMatches as Array
+		
+		put ParseURL(pURL) into tMatches
+		return tMatches["scheme"]
+	end handler
+	
+	
+	public handler urlSetScheme (in pURL as String, in pScheme as String) returns String
+		variable tMatches as Array
+		
+		put ParseURL(pURL) into tMatches
+		put pScheme into tMatches["scheme"]
+
+		return BuildURL(tMatches)
+	end handler
+	
+	
+	/*
+	Summary:   Builds a URL from a URL array.
+	Target:    A url.
+	output:    A url string.
+	*/
+	private handler BuildURL(in pParts as Array) returns String
+		variable tURL as String
+		
+		put pParts["scheme"] & "://" into tURL
+		
+		if pParts["username"] is not empty then
+			put pParts["username"] after tURL
+		end if
+		
+		if pParts["password"] is not empty then
+			put ":" & pParts["password"] after tURL
+		end if
+		
+		if pParts["username"] is not empty or pParts["password"] is not empty then
+			put "@" after tURL
+		end if
+		
+		put pParts["host"] after tURL
+		
+		if pParts["port"] is not empty then
+			put ":" & pParts["port"] after tURL
+		end if
+		
+		if pParts["path"] is not empty then
+			put pParts["path"] after tURL
+		end if
+		
+		if pParts["query string"] is not empty then
+			put "?" & pParts["query string"] after tURL
+		end if
+		
+		if pParts["fragment"] is not empty then
+			put "#" & pParts["fragment"] after tURL
+		end if
+		
+		return tURL
+	end handler
+	
+	
+	private handler ParseURL (in pURL as String) returns Array
+		
+		-- Notes:
+		-- This wont' properly parse a string like:
+		-- http://www.test.com?query=str
+		-- But is that even valid?
+		-- 
+		-- Scheme names consist of a sequence of characters beginning with a
+		-- letter and followed by any combination of letters, digits, plus
+		-- ("+"), period ("."), or hyphen ("-")
+		-- ?: (1) turns off capture for the "scheme://" pattern
+		-- ?: (2) turns off capture for the "username:password" pattern	
+		
+		variable tRegex as String
+		put "(?#scheme)(?:^([a-zA-Z][a-zA-Z0-9\\+\\.-]*)://)?(?#username-pasword)(?:([^/:]+[:@])?([^/:]+)@)?([^/:]*)?(?#port)(:[0-9]*[^/])*(?#path)(/[^?]*)*(?#query)(\\?[^#]*)*(?#fragment)(#.*)*" into tRegex
+         
+    variable tScript as String
+    variable tMatches as Array
+    
+    replace "\q" with "\q & quote & \q" in pURL
+    
+    put "get matchText(\q" & pURL & "\q, \q" & tRegex & "\q, rScheme, rUsername, rPassword, rHost, rPort, rPath, rQueryString, rFragment);" into tScript
+    put "put rScheme into tA[\qscheme\q];put rUsername into tA[\qusername\q];put rPassword into tA[\qpassword\q];" after tScript
+    put "put rHost into tA[\qhost\q];put rPort into tA[\qport\q];put rPath into tA[\qpath\q];" after tScript
+    put "put rQueryString into tA[\qquery string\q];put rFragment into tA[\qfragment\q];return tA" after tScript
+    														
+		-- Use 'execute script' for access to regular expressions.
+		execute script tScript
+		put the result into tMatches
+		
+		-- if no password is provided then the pPassword match is actually username
+		if tMatches["username"] is empty and tMatches["password"] is not empty then
+			put tMatches["password"] into tMatches["username"]
+			put the empty string into tMatches["password"]
+		end if
+		
+		-- The regex could possibly be updated to not include these characters but for now we strip them
+		if tMatches["password"] is not empty and char -1 of tMatches["password"] is "@" then
+			 put char 1 to -2 of tMatches["password"] into tMatches["password"]
+		end if
+		if tMatches["username"] is not empty and char -1 of tMatches["username"] is ":" then
+			put char 1 to -2 of tMatches["username"] into tMatches["username"]
+		end if
+		if tMatches["username"] is not empty and char -1 of tMatches["username"] is "@" then
+			put char 1 to -2 of tMatches["username"] into tMatches["username"]
+		end if
+		if tMatches["port"] is not empty and char 1 of tMatches["port"] is ":" then
+			put char 2 to -1 of tMatches["port"] into tMatches["port"]
+		end if
+		if tMatches["query string"] is not empty and char 1 of tMatches["query string"] is "?" then
+			put char 2 to -1 of tMatches["query string"] into tMatches["query string"]
+		end if
+		if tMatches["fragment"] is not empty and char 1 of tMatches["fragment"] is "#" then
+			put char 2 to -1 of tMatches["fragment"] into tMatches["fragment"]
+		end if
+		
+		return tMatches
+	end handler
+	
+	private handler DecodeURLString(in pString as String) returns String
+		-- RFC 1738 compliant
+		-- http://www.faqs.org/rfcs/rfc1738
+		replace "%20A" with "+" in pString
+		replace "%2A" with "*" in pString
+		
+		variable tScript as String
+		put "get URLDecode(\q" & pString & "\q);return it" into tScript
+		execute script tScript
+		return the result
+	end handler
+	
+	private handler EncodeURLString(in pString as String) returns String
+		-- RFC 1738 compliant
+		-- http://www.faqs.org/rfcs/rfc1738
+		variable tScript as String
+		put "get URLEncode(\q" & pString & "\q);return it" into tScript
+		execute script tScript
+		
+		variable tString
+		put the result into tString
+		replace "+" with "%20" in tString
+		replace "*" with "%2A" in tString
+		return tString
+	end handler
+	
+	private handler URLEncodeArray(in pArray as Array) returns Array
+		variable tResult as Array
+		variable tKey as String
+		
+		put the empty array into tResult
+		
+		repeat for each key tKey in pArray
+			put EncodeURLString(pArray[tKey]) into tResult[EncodeURLString(tKey)]
+		end repeat
+		
+		return tResult
+	end handler
+	
+	private handler URLDecodeArray(in pArray as Array) returns Array
+		variable tResult as Array
+		variable tKey as String
+		
+		put the empty array into tResult
+		
+		repeat for each key tKey in pArray
+			put DecodeURLString(pArray[tKey]) into tResult[DecodeURLString(tKey)]
+		end repeat
+		
+		return tResult
+	end handler
+	
+	private handler SplitStringIntoArray(in pString as String, in pKeyDel as String, in pValueDel as String) returns Array
+		variable tResult as Array
+		put the empty array into tResult
+
+		variable tKeyValue as String
+		split pString by pKeyDel
+		
+		repeat for each element tKeyValue in the result
+			split tKeyValue by pValueDel
+			put element 2 of the result into tResult[element 1 of the result]
+		end repeat
+
+		return tResult
+	end handler
+	
+	
+	private handler CombineArrayIntoString(in pArray as Array, in pKeyDel as String, in pValueDel as String) returns String
+		variable tKey as String
+		variable tList as List
+
+		put [] into tList
+		
+		repeat for each key tKey in pArray
+			push tKey & pValueDel & pArray[tKey] onto tList
+		end repeat
+		
+		combine tList with pKeyDel
+		return the result
+	end handler
+	
+end library
