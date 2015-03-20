@@ -1,3 +1,9 @@
+/*
+
+A slider control. As the user drags the knob the 'valueChanged' message will be sent to the widget. The first parameter is a value between 0 and 1 representing the percentage of the location of the knob relative to the bar.
+
+*/
+
 widget community.livecode.trevordevore.slider
 
 	use com.livecode.widget
@@ -13,7 +19,7 @@ widget community.livecode.trevordevore.slider
 	variable mKnobColor             as Color
 	variable mKnobHiliteColor       as Color
 	variable mKnobBorderColor       as Color
-	variable mKnobHiliteBorderColor as Color
+	variable mKnobBorderHiliteColor as Color
 	variable mKnobBorderSize        as Number
 	
 	-- private
@@ -24,12 +30,14 @@ widget community.livecode.trevordevore.slider
 	variable mClickXOffset      as Real
 	variable mCurrentKnobBounds as Rectangle 
 	
-	property cornerRadius      get mCornerRadius        set setCornerRadius
-	property barColor          get getBarColor          set setBarColor
-	property knobColor         get getKnobColor         set setKnobColor
-	property knobBorderColor   get getKnobBorderColor   set setKnobBorderColor
-	property knobBorderSize    get mKnobBorderSize      set setKnobBorderSize
-	property sliderPercent     get getKnobPercent       set setKnobPercent
+	property cornerRadius            get mCornerRadius              set setCornerRadius
+	property barColor                get getBarColor                set setBarColor
+	property knobColor               get getKnobColor               set setKnobColor
+	property knobHiliteColor         get getKnobHiliteColor         set setKnobHiliteColor
+	property knobBorderColor         get getKnobBorderColor         set setKnobBorderColor
+	property knobBorderHiliteColor   get getKnobBorderHiliteColor   set setKnobBorderHiliteColor
+	property knobBorderSize          get mKnobBorderSize            set setKnobBorderSize
+	property sliderPercent           get getKnobPercent             set setKnobPercent
 
 	metadata barColor.editor        is "com.livecode.pi.color"
 	metadata knobColor.editor       is "com.livecode.pi.color"
@@ -44,7 +52,7 @@ widget community.livecode.trevordevore.slider
 		put color [1, 1, 1] into mKnobColor
 		put color [53/255, 151/255, 243/255] into mKnobHiliteColor
 		put color [155/255, 168/255, 179/255] into mKnobBorderColor
-		put color [53/255, 151/255, 243/255] into mKnobHiliteBorderColor
+		put color [53/255, 151/255, 243/255] into mKnobBorderHiliteColor
 		put 1 into mKnobBorderSize
 		
 		-- private 
@@ -169,7 +177,7 @@ widget community.livecode.trevordevore.slider
 			end if
 		else if pType is "knob border" then
 			if mDrag then
-				return solid paint with mKnobHiliteBorderColor
+				return solid paint with mKnobBorderHiliteColor
 			else
 				return solid paint with mKnobBorderColor
 			end if
@@ -237,12 +245,32 @@ widget community.livecode.trevordevore.slider
 	end handler
 	
 	
+	private handler getKnobHiliteColor() as String
+		return colorToString(mKnobHiliteColor, false)
+	end handler
+	
+	private handler setKnobHiliteColor(in pColor as String)
+		put stringToColor(pColor) into mKnobHiliteColor
+		redraw all
+	end handler
+	
+	
 	private handler getKnobBorderColor() as String
 		return colorToString(mKnobBorderColor, false)
 	end handler
 	
 	private handler setKnobBorderColor(in pColor as String)
 		put stringToColor(pColor) into mKnobBorderColor
+		redraw all
+	end handler
+	
+	
+	private handler getKnobBorderHiliteColor() as String
+		return colorToString(mKnobBorderHiliteColor, false)
+	end handler
+	
+	private handler setKnobBorderHiliteColor(in pColor as String)
+		put stringToColor(pColor) into mKnobBorderHiliteColor
 		redraw all
 	end handler
 	
