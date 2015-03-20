@@ -29,6 +29,7 @@ widget community.livecode.trevordevore.slider
 	variable mSliderBounds    as Rectangle
 	variable mClickXOffset      as Real
 	variable mCurrentKnobBounds as Rectangle 
+	variable mKnobSlidingBounds as Rectangle
 	
 	property cornerRadius            get mCornerRadius              set setCornerRadius
 	property barColor                get getBarColor                set setBarColor
@@ -47,7 +48,7 @@ widget community.livecode.trevordevore.slider
 	
 	public handler OnCreate()
 		-- variables
-		put 3 into mCornerRadius
+		put 5 into mCornerRadius
 		put color [192/255, 198/255, 213/255] into mBarColor
 		put color [1, 1, 1] into mKnobColor
 		put color [53/255, 151/255, 243/255] into mKnobHiliteColor
@@ -70,8 +71,6 @@ widget community.livecode.trevordevore.slider
 		put colorToString(mKnobColor, true) into rProperties["knobColor"]
 		put colorToString(mKnobBorderColor, true) into rProperties["knobBorderColor"]
 		put mKnobBorderSize into rProperties["knobBorderSize"]
-
-		return rProperties
 	end handler
 	
 	
@@ -91,7 +90,7 @@ widget community.livecode.trevordevore.slider
 		
 		calculateGeometry()
 		
-		setKnobX(the left of mSliderBounds + the width of mSliderBounds * tPercent)
+		setKnobX(the left of mKnobSlidingBounds + the width of mKnobSlidingBounds * tPercent)
 	end handler
 	
 	
@@ -161,8 +160,7 @@ widget community.livecode.trevordevore.slider
 				redraw all
 			else if tLoc is within mSliderBounds then
 				-- Jump to location clicked on
-				put the x of tLoc into mKnobX
-				redraw all
+				setKnobX(the x of tLoc)
 			end if
 		end if
 	end handler
@@ -188,33 +186,39 @@ widget community.livecode.trevordevore.slider
 	private handler calculateGeometry()
 		-- determine measurements for everything
 		variable tSliderHeight as Real
-		variable tKnobPadding as Real
+		variable tEffectiveKnobDiameter as Real
 		
 		put my height * 0.416 into tSliderHeight
 		put my height/2-mKnobBorderSize/2 into mKnobRadius -- border will go stroke width/2 beyond this radius
-		put mKnobRadius + mKnobBorderSize/2 into tKnobPadding
+		put mKnobRadius + mKnobBorderSize/2 into tEffectiveKnobDiameter
 		
-		put rectangle [tKnobPadding, my height/2 - tSliderHeight/2, \
-										my width - tKnobPadding, my height/2 + tSliderHeight/2] into mSliderBounds
+		put rectangle [0, my height/2 - tSliderHeight/2, \
+										my width, my height/2 + tSliderHeight/2] into mSliderBounds
+										
+		-- TODO: Once widgets can draw outside of their natural bounds we want knob to go 1 point
+		-- beyond left and right so that it completely covers edges of bar.
+		put mSliderBounds into mKnobSlidingBounds
+		subtract tEffectiveKnobDiameter * 2 from the width of mKnobSlidingBounds
+		add tEffectiveKnobDiameter to the left of mKnobSlidingBounds
 		
-		put the left of mSliderBounds into mKnobX
+		put the left of mKnobSlidingBounds into mKnobX
 		put 0 into mClickXOffset
 		put rectangle [0,0,0,0] into mCurrentKnobBounds
 	end handler
 	
 	
 	private handler setKnobX(in pSuggestedX as Number)
-		put the maximum of the left of mSliderBounds and \
-						(the minimum of the right of mSliderBounds and pSuggestedX) into mKnobX
+		put the maximum of the left of mKnobSlidingBounds and \
+						(the minimum of the right of mKnobSlidingBounds and pSuggestedX) into mKnobX
 	end handler
 	
 	
 	private handler getKnobPercent() as Number
-		return (mKnobX - the left of mSliderBounds) / the width of mSliderBounds
+		return (mKnobX - the left of mKnobSlidingBounds) / the width of mKnobSlidingBounds
 	end handler
 	
 	private handler setKnobPercent(in pPercent as Number)
-		setKnobX(the left of mSliderBounds + the width of mSliderBounds * pPercent)
+		setKnobX(the left of mKnobSlidingBounds + the width of mKnobSlidingBounds * pPercent)
 		redraw all
 	end handler
 	
