@@ -48,7 +48,7 @@ widget community.livecode.trevordevore.slider
 	
 	public handler OnCreate()
 		-- variables
-		put 5 into mCornerRadius
+		put 3 into mCornerRadius
 		put color [192/255, 198/255, 213/255] into mBarColor
 		put color [1, 1, 1] into mKnobColor
 		put color [53/255, 151/255, 243/255] into mKnobHiliteColor
