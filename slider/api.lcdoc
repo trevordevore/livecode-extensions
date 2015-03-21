@@ -2,6 +2,11 @@ Library: community.livecode.trevordevore.slider
 
 Type: widget
 
-Description: A slider control. As the user drags the knob the 'valueChanged' message will be sent to the widget. The first parameter is a value between 0 and 1 representing the percentage of the location of the knob relative to the bar.
-
+Description:
+A slider control. As the user drags the knob the 'valueChanged' message will be sent 
+to the widget. The first parameter is a value between 0 and 1 representing the 
+percentage of the location of the knob relative to the bar.
+You can set the valueRange property to a list of two numbers (e.g. "3,10"). If you do, then the 
+parameter passed to valueChanged will be an integer between and including 
+[low number, high number].
 
