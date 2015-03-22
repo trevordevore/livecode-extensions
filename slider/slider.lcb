@@ -47,6 +47,7 @@ widget community.livecode.trevordevore.slider
 	property knobBorderSize          get mKnobBorderSize            set setKnobBorderSize
 	property sliderPercent           get getKnobPercent             set setKnobPercent
 	property valueRange              get getValueRange              set setValueRange
+	property sliderValue             get getKnobValue               set setKnobValue
 
 	metadata barColor.editor        is "com.livecode.pi.color"
 	metadata knobColor.editor       is "com.livecode.pi.color"
@@ -257,12 +258,22 @@ widget community.livecode.trevordevore.slider
 	
 	
 	private handler getKnobValue() as Integer
-		variable tPercent as Number
-		variable tLength as Number
-		
-		put getKnobPercent() into tPercent
-		put element 2 of mValueRange - element 1 of mValueRange into tLength
-		return the rounded of (element 1 of mValueRange + (tLength * tPercent))
+		if mValueRange is defined then
+			variable tPercent as Number
+			variable tLength as Number
+	
+			put getKnobPercent() into tPercent
+			put element 2 of mValueRange - element 1 of mValueRange into tLength
+			return the rounded of (element 1 of mValueRange + (tLength * tPercent))
+		end if
+	end handler
+	
+	private handler setKnobValue(in pValue as Number)
+		if mValueRange is defined then
+			variable tLength as Number
+			put element 2 of mValueRange - element 1 of mValueRange into tLength
+			setKnobPercent ((pValue-element 1 of mValueRange)/tLength)
+		end if
 	end handler
 	
 	
