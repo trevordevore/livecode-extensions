@@ -147,14 +147,15 @@ widget community.livecode.trevordevore.slider
 	
 	public handler OnMouseUp()	
 		put false into mDrag
-	
 		redraw all
+		post "sliderDragEnd" to my script object
 	end handler
 
 
 	public handler OnMouseCancel()
 		put false into mDrag
 		redraw all
+		post "sliderDragEnd" to my script object
 	end handler
 
 
@@ -169,6 +170,7 @@ widget community.livecode.trevordevore.slider
 				put the x of tLoc - mKnobX into mClickXOffset
 				put true into mDrag
 				redraw all
+				post "sliderDragStart" to my script object
 			else if tLoc is within mSliderBounds then
 				-- Jump to location clicked on
 				setKnobX(the x of tLoc)
