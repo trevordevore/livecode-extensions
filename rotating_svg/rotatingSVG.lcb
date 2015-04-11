@@ -25,7 +25,7 @@ widget com.livecode.extensions.trevordevore.rotatingSVG
 	private variable mRotation          as Number
 
 	property rotateBy           get mRotateBy            set setRotateBy
-	property currentRotation    get mRotateBy            set setRotation
+	property currentRotation    get mRotateBy            set setRotation -- we don't keep track of current rotation. Only set it.
 	property frequency          get mFrequency           set mFrequency
 	property iconStyle          get mIconStyle           set setIconStyle
 	property iconSVGPath        get getIconPath          set setIconPath
@@ -157,19 +157,23 @@ widget com.livecode.extensions.trevordevore.rotatingSVG
 		put colorToString(mColor, true) into rProperties["color"]
 		put mRotateBy into rProperties["rotateBy"]
 		put mFrequency into rProperties["frequency"]
-		put mSVGPath into rProperties["svgPath"]
+		put the instructions of mSVGPath into rProperties["svgPath"]
 		put mIconOrigin into rProperties["iconOrigin"]
 		put mIconSize into rProperties["iconSize"]
+		put mIconStyle into rProperties["iconStyle"]
+		put mIsAnimating into rProperties["animating"]
 	end handler
 
 
 	public handler OnLoad(in pProperties as Array)
-		put pProperties["svgPath"] into mSVGPath
+		put path pProperties["svgPath"] into mSVGPath
 		put stringToColor(pProperties["color"]) into mColor
 		put pProperties["rotateBy"] into mRotateBy
 		put pProperties["frequency"] into mFrequency
 		put pProperties["iconOrigin"] into mIconOrigin
 		put pProperties["iconSize"] into mIconSize
+		put pProperties["iconStyle"] into mIconStyle
+		put pProperties["animating"] into mIsAnimating
 	end handler
 
 
