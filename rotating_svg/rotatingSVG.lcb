@@ -49,9 +49,10 @@ widget community.livecode.trevordevore.rotatingSVG
 
 	metadata iconSVGPath.editor is "com.livecode.pi.text"
 	metadata iconColor.editor is "com.livecode.pi.color"
-	metadata currentRotation.user_visble is "false"
+	metadata iconColor.section is "Colors"
 	metadata iconStyle.editor is "com.livecode.pi.enum"
 	metadata iconStyle.options is "circle notch,cog,pulse,spinner,refresh"
+	metadata currentRotation.user_visible is "false"
 
 	private handler setIconSize(in pSize as Number)
 		put pSize into mIconSize
