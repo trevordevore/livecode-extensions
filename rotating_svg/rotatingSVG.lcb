@@ -73,7 +73,7 @@ widget community.livecode.trevordevore.rotatingSVG
 	
 	private handler setRotation(in pRotation as Number)
 		initializationCalculations()
-		calculateRotatedPath(pRotation)
+		calculateRotatedPath(mWorkingPath, mRotation, mCenter)
 		redraw all
 	end handler
 	
@@ -156,7 +156,6 @@ widget community.livecode.trevordevore.rotatingSVG
 		_setIconStyle("pulse")
 		put color [0/255, 0/255, 0/255] into mColor
 		put [0.50,0.52] into mIconOrigin
-		put path "" into mWorkingPath
 		put true into mIsAnimating
 		put 31 into mIconSize
 		
@@ -209,24 +208,25 @@ widget community.livecode.trevordevore.rotatingSVG
 	end handler
 
 
-	private handler initializationCalculations() returns nothing	
+	private handler initializationCalculations() returns nothing
+		-- Always start with the shape at original position.
+		put mSVGPath into mWorkingPath
+	
 		-- Scale 
-		transform mSVGPath by scaleAndMaintainAspectRatioTransform(the bounding box of mSVGPath, rectangle [0,0,mIconSize,mIconSize])
+		transform mWorkingPath by scaleAndMaintainAspectRatioTransform(the bounding box of mWorkingPath, rectangle [0,0,mIconSize,mIconSize])
 		-- Reset to 0,0
-		translate mSVGPath by [- the x of the bounding box of mSVGPath, \
-												- the y of the bounding box of mSVGPath]
+		translate mWorkingPath by [- the x of the bounding box of mWorkingPath, \
+												- the y of the bounding box of mWorkingPath]
 		-- Center
 		variable tCenterX as Number
 		variable tCenterY as Number
 		
-		put (the width of the bounding box of mSVGPath) * element 1 of mIconOrigin into tCenterX
-		put (the height of the bounding box of mSVGPath) * element 2 of mIconOrigin into tCenterY
-		translate mSVGPath by [my width/2-tCenterX, my height/2-tCenterY]
-		put point [(the left of the bounding box of mSVGPath) + tCenterX, \
-								(the top of the bounding box of mSVGPath) + tCenterY] into mCenter
-								
-		put mSVGPath into mWorkingPath
-		
+		put (the width of the bounding box of mWorkingPath) * element 1 of mIconOrigin into tCenterX
+		put (the height of the bounding box of mWorkingPath) * element 2 of mIconOrigin into tCenterY
+		translate mWorkingPath by [my width/2-tCenterX, my height/2-tCenterY]
+		put point [(the left of the bounding box of mWorkingPath) + tCenterX, \
+								(the top of the bounding box of mWorkingPath) + tCenterY] into mCenter
+										
 		put 0 into mRotation
 	end handler
 
@@ -244,7 +244,7 @@ widget community.livecode.trevordevore.rotatingSVG
 
 
 	-- Very useful article: http://docs.rainmeter.net/tips/transformation-matrix-guide
-	private handler calculateRotatedPath(in pRotation as Number)
+	private handler calculateRotatedPath(inout pPath as Path, in pRotation as Number, in pCenter as Point)
 		variable tX as Number
 		variable tY as Number
 		variable tOriginX as Number
@@ -264,8 +264,8 @@ widget community.livecode.trevordevore.rotatingSVG
 		put sin(tAngle) into tB -- scale the y
 		put -sin(tAngle) into tC -- skew the x
 		put cos(tAngle) into tD -- skew the y
-		put the x of mCenter into tOriginX
-		put the y of mCenter into tOriginY
+		put the x of pCenter into tOriginX
+		put the y of pCenter into tOriginY
 	
 		put tOriginX - tOriginX*tA - tOriginY*tC into tX
 		put tOriginY - tOriginX*tB - tOriginY*tD into tY	
@@ -273,19 +273,16 @@ widget community.livecode.trevordevore.rotatingSVG
 		variable tTransform as Transform
 		put transform with matrix [tA,tB,tC,tD,tX,tY] into tTransform
 		
-		put mSVGPath into mWorkingPath
-		transform mWorkingPath by tTransform
+		transform pPath by tTransform
 	end handler
 
 	----------
 	-- this handler is called when the timer scheduled with 'schedule timer' fires
 	public handler OnTimer()
-		put (mRotation + mRotateBy) mod 360 into mRotation
-		calculateRotatedPath(mRotation)
+		calculateRotatedPath(mWorkingPath, mRotateBy, mCenter)
 		redraw all
 		
 		if mIsAnimating then
-			--cancel timer
 			schedule timer in mFrequency seconds -- add function to keep timer firing exactly right?
 		end if
 	end handler
