@@ -1,0 +1,8 @@
+Library: community.livecode.trevordevore.svgIcon
+
+Type: widget
+
+Description:
+Very simple control that displays an SVG path. You can set a hilite color but you must
+specifically set the isHilited property to toggle the display.
+
