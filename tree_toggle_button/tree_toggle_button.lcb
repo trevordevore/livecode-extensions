@@ -6,43 +6,62 @@ widget community.livecode.trevordevore.treeToggleButton
 
 	metadata title is "Tree Toggle Button"
 	metadata author is "Trevor DeVore"
-	metadata version is "1.0.4"
+	metadata version is "1.0.0"
 	
 	-- public
 	private variable mIsOpen                as Boolean
+	private variable mHasChildren           as Boolean
 	private variable mOpenSVGPath           as Path
 	private variable mClosedSVGPath         as Path
+	private variable mNoChildrenSVGPath     as Path
 	private variable mFillColor             as Color
 	private variable mFillHiliteColor       as Color
 	private variable mOpenColor             as optional Color -- inherits mFillColor by default
 	private variable mOpenHiliteColor       as optional Color -- inherits mFillHiliteColor by default
+	private variable mNoChildrenColor       as optional Color -- inherits mFillColor by default
+	private variable mNoChildrenHiliteColor as optional Color -- inherits mFillHiliteColor by default
 	
 	-- private
 	private variable mState                 as String
 	
 	property isOpen                         get mIsOpen                     set setIsOpen
+	property hasChildren                    get mHasChildren                set setHasChildren
 	property openSVGPath                    get getOpenSVGPath              set setOpenSVGPath
 	property closedSVGPath                  get getClosedSVGPath            set setClosedSVGPath
+	property noChildrenSVGPath              get getNoChildrenSVGPath        set setNoChildrenSVGPath
 	property fillColor                      get getFillColor                set setFillColor
 	property fillHiliteColor                get getFillHiliteColor          set setFillHiliteColor
-	property openColor                    get getOpenColor                set setOpenColor
-	property openHiliteColor              get getOpenHiliteColor          set setOpenHiliteColor
+	property openColor                      get getOpenColor                set setOpenColor
+	property openHiliteColor                get getOpenHiliteColor          set setOpenHiliteColor
+	property noChildrenColor                get getNoChildrenColor          set setNoChildrenColor
+	property noChildrenHiliteColor          get getNoChildrenHiliteColor    set setNoChildrenHiliteColor
 	
 	metadata openSVGPath.editor             is "com.livecode.pi.text"
 	metadata closedSVGPath.editor           is "com.livecode.pi.text"
+	metadata noChildrenSVGPath.editor       is "com.livecode.pi.text"
 	metadata fillColor.editor               is "com.livecode.pi.color"
 	metadata fillHiliteColor.editor         is "com.livecode.pi.color"
-	metadata openColor.editor             is "com.livecode.pi.color"
-	metadata openHiliteColor.editor       is "com.livecode.pi.color"
+	metadata openColor.editor               is "com.livecode.pi.color"
+	metadata openHiliteColor.editor         is "com.livecode.pi.color"
+	metadata noChildrenColor.editor         is "com.livecode.pi.color"
+	metadata noChildrenHiliteColor.editor   is "com.livecode.pi.color"
 
 	metadata fillColor.section              is "Colors"
 	metadata fillHiliteColor.section        is "Colors"
-	metadata openColor.section            is "Colors"
-	metadata openHiliteColor.section      is "Colors"
+	metadata openColor.section              is "Colors"
+	metadata openHiliteColor.section        is "Colors"
+	metadata noChildrenColor.section        is "Colors"
+	metadata noChildrenHiliteColor.section  is "Colors"
 	
 	
 	private handler setIsOpen(in pBoolean as Boolean)
 		put pBoolean into mIsOpen
+		redraw all
+	end handler
+	
+	
+	private handler setHasChildren(in pBoolean as Boolean)
+		put pBoolean into mHasChildren
 		redraw all
 	end handler
 	
@@ -56,7 +75,7 @@ widget community.livecode.trevordevore.treeToggleButton
 		calculatePaths()
 		redraw all
 	end handler
-	
+		
 	
 	private handler getClosedSVGPath() returns String
 		return the instructions of mClosedSVGPath
@@ -64,6 +83,17 @@ widget community.livecode.trevordevore.treeToggleButton
 	
 	private handler setClosedSVGPath(in pPath as String)
 		put path pPath into mClosedSVGPath
+		calculatePaths()
+		redraw all
+	end handler
+	
+	
+	private handler getNoChildrenSVGPath() returns String
+		return the instructions of mNoChildrenSVGPath
+	end handler
+	
+	private handler setNoChildrenSVGPath(in pPath as String)
+		put path pPath into mNoChildrenSVGPath
 		calculatePaths()
 		redraw all
 	end handler
@@ -125,14 +155,54 @@ widget community.livecode.trevordevore.treeToggleButton
 	end handler
 	
 	
+	private handler getNoChildrenColor() returns String
+		if mNoChildrenColor is nothing then
+			return ""
+		else
+			return colorToString(mNoChildrenColor, false)
+		end if
+	end handler
+		
+	private handler setNoChildrenColor(in pString as String)
+		if pString is "" then
+			put nothing into mNoChildrenColor
+		else
+			put stringToColor(pString) into mNoChildrenColor
+		end if
+		redraw all
+	end handler
+	
+	
+	private handler getNoChildrenHiliteColor() returns String
+		if mNoChildrenHiliteColor is nothing then
+			return ""
+		else
+			return colorToString(mNoChildrenHiliteColor, false)
+		end if
+	end handler
+		
+	private handler setNoChildrenHiliteColor(in pString as String)
+		if pString is "" then
+			put nothing into mNoChildrenHiliteColor
+		else
+			put stringToColor(pString) into mNoChildrenHiliteColor
+		end if
+		redraw all
+	end handler
+	
+	
 	public handler OnCreate()
+		put true into mHasChildren
 		put false into mIsOpen
 		put color [0.4,0.4,0.4] into mFillColor
 		put color [0,0,0] into mFillHiliteColor
 		put nothing into mOpenColor
 		put nothing into mOpenHiliteColor
+		put nothing into mNoChildrenColor
+		put nothing into mNoChildrenHiliteColor
 		put path "M13.3,0H2.7C1.2,0,0,1.2,0,2.7v10.7C0,14.8,1.2,16,2.7,16h10.7c1.5,0,2.7-1.2,2.7-2.7V2.7C16,1.2,14.8,0,13.3,0z M12.7,9.3 H9.3v3.3H6.7V9.3H3.3V6.7h3.3V3.3h2.7v3.3h3.3V9.3z" into mClosedSVGPath
 		put path "M13.3,0H2.7C1.2,0,0,1.2,0,2.7v10.7C0,14.8,1.2,16,2.7,16h10.7 c1.5,0,2.7-1.2,2.7-2.7V2.7C16,1.2,14.8,0,13.3,0z M12.7,9.3H3.3V6.7h9.3V9.3z" into mOpenSVGPath
+		put path "M13.3,0H2.7C1.2,0,0,1.2,0,2.7v10.7C0,14.8,1.2,16,2.7,16h10.7c1.5,0,2.7-1.2,2.7-2.7V2.7C16,1.2,14.8,0,13.3,0z M14.4,12.3 c0,1.2-1,2.1-2.1,2.1H3.7c-1.2,0-2.1-1-2.1-2.1V3.7c0-1.2,1-2.1,2.1-2.1h8.5c1.2,0,2.1,1,2.1,2.1V12.3z" into mNoChildrenSVGPath
 		
 		put "up" into mState
 	end handler
@@ -143,7 +213,8 @@ widget community.livecode.trevordevore.treeToggleButton
 	
 		put mIsOpen into rProperties["isOpen"]
 		put the instructions of mOpenSVGPath into rProperties["openSVGPath"]
-		put the instructions of mClosedSVGPath into rProperties["closedSVGPath"]	
+		put the instructions of mClosedSVGPath into rProperties["closedSVGPath"]
+		put the instructions of mNoChildrenSVGPath into rProperties["noChildrenSVGPath"]
 		put colorToString(mFillColor, true) into rProperties["fillColor"]
 		put colorToString(mFillHiliteColor, true) into rProperties["fillHiliteColor"]
 		if mOpenColor is nothing then 
@@ -156,6 +227,16 @@ widget community.livecode.trevordevore.treeToggleButton
 		else
 			put colorToString(mOpenHiliteColor, true) into rProperties["openHiliteColor"]
 		end if
+		if mNoChildrenColor is nothing then 
+			put nothing into rProperties["noChildrenColor"]
+		else
+			put colorToString(mNoChildrenColor, true) into rProperties["noChildrenColor"]
+		end if
+		if mNoChildrenHiliteColor is nothing then 
+			put nothing into rProperties["noChildrenHiliteColor"]
+		else
+			put colorToString(mNoChildrenHiliteColor, true) into rProperties["noChildrenHiliteColor"]
+		end if
 	end handler
 	
 	
@@ -163,8 +244,9 @@ widget community.livecode.trevordevore.treeToggleButton
 		put pProperties["isOpen"] into mIsOpen
 		put path pProperties["openSVGPath"] into mOpenSVGPath
 		put path pProperties["closedSVGPath"] into mClosedSVGPath
+		put path pProperties["noChildrenSVGPath"] into mNoChildrenSVGPath
 		put stringToColor(pProperties["fillColor"]) into mFillColor
-		put stringToColor(pProperties["fillHiliteColor"]) into mFillColor
+		put stringToColor(pProperties["fillHiliteColor"]) into mFillHiliteColor
 		if pProperties["openColor"] is nothing then
 			put nothing into mOpenColor
 		else
@@ -174,6 +256,16 @@ widget community.livecode.trevordevore.treeToggleButton
 			put nothing into mOpenHiliteColor
 		else
 			put stringToColor(pProperties["openHiliteColor"]) into mOpenHiliteColor
+		end if
+		if pProperties["noChildrenColor"] is nothing then
+			put nothing into mNoChildrenColor
+		else
+			put stringToColor(pProperties["noChildrenColor"]) into mNoChildrenColor
+		end if
+		if pProperties["noChildrenHiliteColor"] is nothing then
+			put nothing into mNoChildrenHiliteColor
+		else
+			put stringToColor(pProperties["noChildrenHiliteColor"]) into mNoChildrenHiliteColor
 		end if
 	end handler
 	
@@ -187,7 +279,9 @@ widget community.livecode.trevordevore.treeToggleButton
 		-- Set color
 		set the paint of this canvas to solid paint with getColor()
 	
-		if mIsOpen then
+		if not mHasChildren then
+			fill mNoChildrenSVGPath on this canvas
+		else if mIsOpen then
 			fill mOpenSVGPath on this canvas
 		else
 			fill mClosedSVGPath on this canvas
@@ -239,12 +333,23 @@ widget community.livecode.trevordevore.treeToggleButton
 		transform mClosedSVGPath by scaleAndMaintainAspectRatioTransform(the bounding box of mClosedSVGPath, my bounds)
 		-- Reset to 0,0
 		translate mClosedSVGPath by [- the left of the bounding box of mClosedSVGPath, - the top of the bounding box of mClosedSVGPath]
+		
+		-- Scale 
+		transform mNoChildrenSVGPath by scaleAndMaintainAspectRatioTransform(the bounding box of mNoChildrenSVGPath, my bounds)
+		-- Reset to 0,0
+		translate mNoChildrenSVGPath by [- the left of the bounding box of mNoChildrenSVGPath, - the top of the bounding box of mNoChildrenSVGPath]
 	end handler
 	
 	
 	private handler getColor() returns Color
 		if mState is "up" then
-			if not mIsOpen then
+			if not mHasChildren then
+				if mNoChildrenColor is nothing then
+					return mFillColor
+				else
+					return mNoChildrenColor
+				end if
+			else if not mIsOpen then
 				return mFillColor
 			else
 				if mOpenColor is nothing then
@@ -254,7 +359,13 @@ widget community.livecode.trevordevore.treeToggleButton
 				end if
 			end if
 		else
-			if not mIsOpen then
+			if not mHasChildren then
+				if mNoChildrenHiliteColor is nothing then
+					return mFillHiliteColor
+				else
+					return mNoChildrenHiliteColor
+				end if
+			else if not mIsOpen then
 				return mFillHiliteColor
 			else
 				if mOpenColor is nothing then
