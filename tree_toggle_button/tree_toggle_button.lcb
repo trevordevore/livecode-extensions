@@ -1,0 +1,379 @@
+widget community.livecode.trevordevore.treeToggleButton
+
+	use com.livecode.canvas
+	use com.livecode.widget
+	use com.livecode.engine
+
+	metadata title is "Tree Toggle Button"
+	metadata author is "Trevor DeVore"
+	metadata version is "1.0.4"
+	
+	-- public
+	private variable mIsOpen                as Boolean
+	private variable mOpenSVGPath           as Path
+	private variable mClosedSVGPath         as Path
+	private variable mFillColor             as Color
+	private variable mFillHiliteColor       as Color
+	private variable mOpenColor             as optional Color -- inherits mFillColor by default
+	private variable mOpenHiliteColor       as optional Color -- inherits mFillHiliteColor by default
+	
+	-- private
+	private variable mState                 as String
+	
+	property isOpen                         get mIsOpen                     set setIsOpen
+	property openSVGPath                    get getOpenSVGPath              set setOpenSVGPath
+	property closedSVGPath                  get getClosedSVGPath            set setClosedSVGPath
+	property fillColor                      get getFillColor                set setFillColor
+	property fillHiliteColor                get getFillHiliteColor          set setFillHiliteColor
+	property openColor                    get getOpenColor                set setOpenColor
+	property openHiliteColor              get getOpenHiliteColor          set setOpenHiliteColor
+	
+	metadata openSVGPath.editor             is "com.livecode.pi.text"
+	metadata closedSVGPath.editor           is "com.livecode.pi.text"
+	metadata fillColor.editor               is "com.livecode.pi.color"
+	metadata fillHiliteColor.editor         is "com.livecode.pi.color"
+	metadata openColor.editor             is "com.livecode.pi.color"
+	metadata openHiliteColor.editor       is "com.livecode.pi.color"
+
+	metadata fillColor.section              is "Colors"
+	metadata fillHiliteColor.section        is "Colors"
+	metadata openColor.section            is "Colors"
+	metadata openHiliteColor.section      is "Colors"
+	
+	
+	private handler setIsOpen(in pBoolean as Boolean)
+		put pBoolean into mIsOpen
+		redraw all
+	end handler
+	
+	
+	private handler getOpenSVGPath() returns String
+		return the instructions of mOpenSVGPath
+	end handler
+	
+	private handler setOpenSVGPath(in pPath as String)
+		put path pPath into mOpenSVGPath
+		calculatePaths()
+		redraw all
+	end handler
+	
+	
+	private handler getClosedSVGPath() returns String
+		return the instructions of mClosedSVGPath
+	end handler
+	
+	private handler setClosedSVGPath(in pPath as String)
+		put path pPath into mClosedSVGPath
+		calculatePaths()
+		redraw all
+	end handler
+	
+	
+	private handler getFillColor() returns String
+		return colorToString(mFillColor, false)
+	end handler
+		
+	private handler setFillColor(in pString as String)
+		put stringToColor(pString) into mFillColor
+		redraw all
+	end handler
+	
+	
+	private handler getFillHiliteColor() returns String
+		return colorToString(mFillHiliteColor, false)
+	end handler
+		
+	private handler setFillHiliteColor(in pString as String)
+		put stringToColor(pString) into mFillHiliteColor
+		redraw all
+	end handler
+	
+	
+	private handler getOpenColor() returns String
+		if mOpenColor is nothing then
+			return ""
+		else
+			return colorToString(mOpenColor, false)
+		end if
+	end handler
+		
+	private handler setOpenColor(in pString as String)
+		if pString is "" then
+			put nothing into mOpenColor
+		else
+			put stringToColor(pString) into mOpenColor
+		end if
+		redraw all
+	end handler
+	
+	
+	private handler getOpenHiliteColor() returns String
+		if mOpenHiliteColor is nothing then
+			return ""
+		else
+			return colorToString(mOpenHiliteColor, false)
+		end if
+	end handler
+		
+	private handler setOpenHiliteColor(in pString as String)
+		if pString is "" then
+			put nothing into mOpenHiliteColor
+		else
+			put stringToColor(pString) into mOpenHiliteColor
+		end if
+		redraw all
+	end handler
+	
+	
+	public handler OnCreate()
+		put false into mIsOpen
+		put color [0.4,0.4,0.4] into mFillColor
+		put color [0,0,0] into mFillHiliteColor
+		put nothing into mOpenColor
+		put nothing into mOpenHiliteColor
+		put path "M13.3,0H2.7C1.2,0,0,1.2,0,2.7v10.7C0,14.8,1.2,16,2.7,16h10.7c1.5,0,2.7-1.2,2.7-2.7V2.7C16,1.2,14.8,0,13.3,0z M12.7,9.3 H9.3v3.3H6.7V9.3H3.3V6.7h3.3V3.3h2.7v3.3h3.3V9.3z" into mClosedSVGPath
+		put path "M13.3,0H2.7C1.2,0,0,1.2,0,2.7v10.7C0,14.8,1.2,16,2.7,16h10.7 c1.5,0,2.7-1.2,2.7-2.7V2.7C16,1.2,14.8,0,13.3,0z M12.7,9.3H3.3V6.7h9.3V9.3z" into mOpenSVGPath
+		
+		put "up" into mState
+	end handler
+	
+	
+	public handler OnSave(out rProperties as Array)
+		put the empty array into rProperties
+	
+		put mIsOpen into rProperties["isOpen"]
+		put the instructions of mOpenSVGPath into rProperties["openSVGPath"]
+		put the instructions of mClosedSVGPath into rProperties["closedSVGPath"]	
+		put colorToString(mFillColor, true) into rProperties["fillColor"]
+		put colorToString(mFillHiliteColor, true) into rProperties["fillHiliteColor"]
+		if mOpenColor is nothing then 
+			put nothing into rProperties["openColor"]
+		else
+			put colorToString(mOpenColor, true) into rProperties["openColor"]
+		end if
+		if mOpenHiliteColor is nothing then 
+			put nothing into rProperties["openHiliteColor"]
+		else
+			put colorToString(mOpenHiliteColor, true) into rProperties["openHiliteColor"]
+		end if
+	end handler
+	
+	
+	public handler OnLoad(in pProperties as Array)
+		put pProperties["isOpen"] into mIsOpen
+		put path pProperties["openSVGPath"] into mOpenSVGPath
+		put path pProperties["closedSVGPath"] into mClosedSVGPath
+		put stringToColor(pProperties["fillColor"]) into mFillColor
+		put stringToColor(pProperties["fillHiliteColor"]) into mFillColor
+		if pProperties["openColor"] is nothing then
+			put nothing into mOpenColor
+		else
+			put stringToColor(pProperties["openColor"]) into mOpenColor
+		end if
+		if pProperties["openHiliteColor"] is nothing then
+			put nothing into mOpenHiliteColor
+		else
+			put stringToColor(pProperties["openHiliteColor"]) into mOpenHiliteColor
+		end if
+	end handler
+	
+	
+	public handler OnOpen()
+		calculatePaths()
+	end handler
+	
+	
+	public handler OnPaint()
+		-- Set color
+		set the paint of this canvas to solid paint with getColor()
+	
+		if mIsOpen then
+			fill mOpenSVGPath on this canvas
+		else
+			fill mClosedSVGPath on this canvas
+		end if
+	end handler
+	
+	
+	public handler OnMouseUp()
+		if the current mouse position is within my bounds then
+			post "mouseUp" to my script object with [FormatInt(the click button)]
+		else
+			post "mouseRelease" to my script object with [FormatInt(the click button)]
+		end if
+	
+		put "up" into mState
+	
+		redraw all
+	end handler
+
+
+	public handler OnMouseCancel()
+		post "mouseRelease" to my script object with [FormatInt(the click button)]
+		put "up" into mState
+		redraw all
+	end handler
+
+
+	public handler OnMouseDown()
+		put "down" into mState
+		redraw all
+	
+		post "mouseDown" to my script object with [FormatInt(the click button)]
+	end handler
+	
+	
+	public handler OnGeometryChanged()
+		calculatePaths()
+		redraw all
+	end handler
+	
+	
+	private handler calculatePaths()
+		-- Scale 
+		transform mOpenSVGPath by scaleAndMaintainAspectRatioTransform(the bounding box of mOpenSVGPath, my bounds)
+		-- Reset to 0,0
+		translate mOpenSVGPath by [- the left of the bounding box of mOpenSVGPath, - the top of the bounding box of mOpenSVGPath]
+		
+		-- Scale 
+		transform mClosedSVGPath by scaleAndMaintainAspectRatioTransform(the bounding box of mClosedSVGPath, my bounds)
+		-- Reset to 0,0
+		translate mClosedSVGPath by [- the left of the bounding box of mClosedSVGPath, - the top of the bounding box of mClosedSVGPath]
+	end handler
+	
+	
+	private handler getColor() returns Color
+		if mState is "up" then
+			if not mIsOpen then
+				return mFillColor
+			else
+				if mOpenColor is nothing then
+					return mFillColor
+				else
+					return mOpenColor
+				end if
+			end if
+		else
+			if not mIsOpen then
+				return mFillHiliteColor
+			else
+				if mOpenColor is nothing then
+					return mFillHiliteColor
+				else
+					return mOpenHiliteColor
+				end if
+			end if
+		end if
+	end handler
+	
+	
+	-- Translated from some Skia code
+	private handler scaleAndMaintainAspectRatioTransform(in pSrcBounds as Rectangle, in pDestBounds as Rectangle) returns Transform
+		// Prepare values for matrix transformation
+		variable isLarger as Boolean
+		variable sX as Number
+		variable sY as Number
+	
+		put false into isLarger
+		put the width of pDestBounds / the width of pSrcBounds into sX
+		put the height of pDestBounds / the height of pSrcBounds into sY
+	
+		if sX > sY then
+			put true into isLarger
+			put sY into sX
+		else
+			put sX into sY
+		end if
+	
+		variable tX as Number
+		variable tY as Number
+	
+		put the left of pDestBounds - (the left of pSrcBounds*sX) into tX
+		put the top of pDestBounds - (the top of pSrcBounds*sY) into tY
+	
+		variable tDiff as Number
+	
+		if isLarger then
+			put my width - (the width of pSrcBounds*sY) into tDiff
+		else
+			put my height - (the height of pSrcBounds*sY) into tDiff
+		end if
+	
+		// align center
+		divide tDiff by 2
+	
+		if isLarger then
+			add tDiff to tX
+		else
+			add tDiff to tY
+		end if
+	
+		// create transformation matrix and apply
+		variable tTransform as Transform
+		put transform with matrix [sX, 0, 0, sY, tX, tY] into tTransform
+	
+		return tTransform
+	end handler
+	
+	
+	handler FormatInt(in pNumber as Number) returns String
+		variable tNumberString as String
+
+		put pNumber formatted as string into tNumberString
+
+		if "." is in tNumberString then
+			variable tDotOffset
+			put the first offset of "." in tNumberString into tDotOffset
+			delete char tDotOffset to (the number of chars in tNumberString) of tNumberString
+		end if
+
+		return tNumberString
+	end handler
+
+
+	private handler colorToString(in pColor as Color, in pIncludeAlpha as Boolean) returns String
+		variable tColor as String
+
+		put FormatInt(the rounded of ((the red of pColor) * 255)) into tColor
+		put "," & FormatInt(the rounded of ((the green of pColor) * 255)) after tColor
+		put "," & FormatInt(the rounded of ((the blue of pColor) * 255)) after tColor
+
+		if pIncludeAlpha then
+			put "," & FormatInt(the rounded of ((the alpha of pColor) * 255)) after tColor
+		end if
+
+		return tColor
+	end handler
+
+	----------
+	-- this handler converts a String of numbers to an RGBA color
+	private handler stringToColor(in pString as String) returns Color	
+		variable tRed as Real
+		variable tGreen as Real
+		variable tBlue as Real
+		variable tAlpha as Real
+
+		variable tComponentList as List
+		split pString by "," into tComponentList
+
+		variable tComponentCount
+		put the number of elements in tComponentList into tComponentCount
+		if tComponentCount is not 3 and tComponentCount is not 4 then
+			// Invalid number of components detected
+			throw "Invalid color"
+		end if
+
+		put (element 1 of tComponentList) parsed as number into tRed
+		put (element 2 of tComponentList) parsed as number into tGreen
+		put (element 3 of tComponentList) parsed as number into tBlue
+
+		if tComponentCount is 4 then
+			put (element 4 of tComponentList) parsed as number into tAlpha
+		else
+			put 255 into tAlpha
+		end if
+
+		return color [ tRed/255, tGreen/255, tBlue/255, tAlpha/255 ]
+	end handler
+	
+end widget
