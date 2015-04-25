@@ -1,0 +1,119 @@
+Library: community.livecode.trevordevore.circleProgress
+
+Type: widget
+
+Description: 
+
+Name: percent
+
+Type: property
+
+Syntax:
+set the percent of <widget> to <pPercent>
+get the percent of <widget>
+
+Summary: Sets the percent of the circle that are filled.
+
+Parameters: 
+
+pPercent(number): A value between 0 and 1.
+
+Example:     set the percent of widget "ProgressIndicator" to tBytesDownloaded/tTotalBytes
+
+Description: Update the progress indicator based upon a percentage.
+
+Name: degrees
+
+Type: property
+
+Syntax:
+set the degrees of <widget> to <pDegrees>
+get the degrees of <widget>
+
+Summary: Sets the number of degrees of the circle that are filled.
+
+Parameters: 
+
+pDegrees(number): A value between 0 and 360.
+
+Example:     set the degrees of widget "ProgressIndicator" to 176
+
+Description: Update the progress indicator using degrees.
+
+Name: borderSize
+
+Type: property
+
+Syntax:
+set the borderSize of <widget> to <pSize>
+get the borderSize of <widget>
+
+Summary: Sets the size of the border around the widget.
+
+Parameters: 
+
+pSize(number): The size of the border. Set to 0 if you don't want a border.
+
+Example:
+    set the borderSize of widget "ProgressIndicator" to 5
+    set the borderSize of widget "ProgressIndicator" to 0 -- hide the border
+
+Description: Allows you to change the size of the border.
+
+Name: progressColor
+
+Type: property
+
+Syntax:
+set the progressColor of <widget> to <pColor>
+get the progressColor of <widget>
+
+Summary: Sets the color of the progress indicator component of the widget.
+
+Parameters: 
+
+pColor(string): The RGB color. You can optionally include the alpha value as well.
+
+Example:
+    set the progressColor of widget "ProgressIndicator" to "255,255,255"
+    set the progressColor of widget "ProgressIndicator" to "255,255,255,130" -- transparent white
+
+Description: Set the color of the progress indicator component to match the design of your application.
+
+Name: backColor
+
+Type: property
+
+Syntax:
+set the backColor of <widget> to <pColor>
+get the backColor of <widget>
+
+Summary: Sets the color of the area of the widget that is not filled with the progressColor.
+
+Parameters: 
+
+pColor(string): The RGB color. You can optionally include the alpha value as well.
+
+Example:     set the backColor of widget "ProgressIndicator" to "255,255,255"
+
+Description: Set the color of the background to match the design of your application.
+
+Name: borderColor
+
+Type: property
+
+Syntax:
+set the borderColor of <widget> to <pColor>
+get the borderColor of <widget>
+
+Summary: Sets the color of the border.
+
+Parameters: 
+
+pColor(string): The RGB color. You can optionally include the alpha value as well.
+
+Example:     set the borderColor of widget "ProgressIndicator" to "255,255,255"
+
+Description: Set the color of the border to match the design of your application.
+
+
