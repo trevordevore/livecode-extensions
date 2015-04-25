@@ -1,0 +1,278 @@
+widget community.livecode.trevordevore.circleProgress
+
+	use com.livecode.engine
+	use com.livecode.widget
+	use com.livecode.canvas
+	use com.livecode.math
+
+	metadata title is "Circle Progress"
+	metadata author is "Trevor DeVore"
+	metadata version is "1.0.0"
+	
+	-- public
+	private variable mDegrees               as Number
+	private variable mEmptyFillColor        as optional Color
+	private variable mProgressFillColor     as Color
+	private variable mBorderColor           as optional Color
+	private variable mStrokeWidth           as Number
+	
+	-- private 
+	private variable mRotateCircleBy        as Number
+	private variable mProgressPath          as optional Path
+	private variable mStrokePath            as optional Path
+	
+	property degrees          get mDegrees           set setDegrees
+	property percent          get getPercent         set setPercent
+	property progressColor    get getProgressColor   set setProgressColor
+	property backColor        get getBackColor       set setBackColor
+	property borderSize       get mStrokeWidth       set setBorderSize
+	property borderColor      get getBorderColor     set setBorderColor
+	
+	metadata progressColor.editor is "com.livecode.pi.color"
+	metadata backColor.editor is "com.livecode.pi.color"
+	metadata borderColor.editor is "com.livecode.pi.color"
+	
+	metadata progressColor.section is "Colors"
+	metadata backColor.section is "Colors"
+	metadata borderColor.section is "Colors"
+	metadata degrees.user_visible is "false"
+	
+	
+	public handler setDegrees(in pValue as Number)
+		if pValue < 360 then
+			put pValue mod 360 into mDegrees
+		else
+			put pValue into mDegrees
+		end if
+		calculatePaths()
+		redraw all
+	end handler
+	
+	public handler getPercent() returns Number
+		return mDegrees/360
+	end handler
+	
+	public handler setPercent(in pPercent as Number)
+		if pPercent >=0 and pPercent <= 1 then
+			put 360 * pPercent into mDegrees
+			calculatePaths()
+			redraw all
+		end if
+	end handler
+	
+	public handler getProgressColor() returns String
+		return colorToString(mProgressFillColor, false)
+	end handler
+	
+	public handler setProgressColor(in pColor as String)
+		put stringToColor(pColor) into mProgressFillColor
+		redraw all
+	end handler
+	
+	public handler getBackColor() returns String
+		if mEmptyFillColor is nothing then
+			return ""
+		else
+			return colorToString(mEmptyFillColor, false)
+		end if
+	end handler
+	
+	public handler setBackColor(in pColor as String)
+		if pColor is empty then
+			put nothing into mEmptyFillColor
+		else
+			put stringToColor(pColor) into mEmptyFillColor
+		end if
+		redraw all
+	end handler
+	
+	public handler setBorderSize(in pSize as Number)
+		put pSize into mStrokeWidth
+		calculatePaths()
+		redraw all
+	end handler
+	
+	public handler getBorderColor() returns String
+		if mBorderColor is nothing then
+			return ""
+		else
+			return colorToString(mBorderColor, false)
+		end if
+	end handler
+	
+	public handler setBorderColor(in pColor as String)
+		if pColor is empty then
+			put nothing into mBorderColor
+		else
+			put stringToColor(pColor) into mBorderColor
+		end if
+		redraw all
+	end handler
+	
+	
+	public handler OnCreate()
+		put -90 into mRotateCircleBy -- 0 starts at EAST. Subtract 90 so it points NORTH.
+		
+		put 3 into mStrokeWidth
+		put 0 into mDegrees
+		put color [1,1,1] into mEmptyFillColor
+		put color [0.81,0.84,0.92] into mProgressFillColor
+		put color [0.81,0.84,0.92] into mBorderColor
+		calculatePaths()
+	end handler
+	
+
+	public handler OnPaint()
+		if mStrokePath is not nothing then
+			if mEmptyFillColor is not nothing then
+				set the paint of this canvas to solid paint with mEmptyFillColor
+				fill mStrokePath on this canvas
+			end if
+			
+			if mStrokeWidth > 0 then
+				set the stroke width of this canvas to mStrokeWidth
+				set the paint of this canvas to solid paint with mBorderColor
+				stroke mStrokePath on this canvas 
+			end if
+		end if
+		
+		if mProgressPath is not nothing then
+			set the paint of this canvas to solid paint with mProgressFillColor
+			fill mProgressPath on this canvas
+		end if
+	end handler
+	
+	
+	private handler calculatePaths()
+		variable tRadius as Number
+		
+		put nothing into mStrokePath
+		
+		if my width > my height then
+			put my height/2 into tRadius
+		else
+			put my width/2 into tRadius
+		end if
+		
+		// Stroke and fill
+		if mStrokeWidth > 0 or mEmptyFillColor is not nothing then		
+			put circle path centered at point [my width/2, my height/2] with radius (tRadius-mStrokeWidth/2) into mStrokePath
+		end if
+		
+		variable tOriginX as Number
+		variable tOriginY as number
+		
+		put my width / 2 into tOriginX
+		put my height / 2 into tOriginY
+		
+		// Progress
+		if mDegrees is 0 then
+			-- nothing
+			put nothing into mProgressPath
+		else if mDegrees is 360 then
+			put circle path centered at point [tOriginX,tOriginY] with radius tRadius into mProgressPath
+		else
+			variable tAngle as Number
+			variable tX as Number
+			variable tY as Number
+			
+			put the empty path into mProgressPath
+			
+			put (mDegrees+mRotateCircleBy)*(pi/180) into tAngle
+			put tOriginX + tRadius * cos(tAngle) into tX
+			put tOriginY + tRadius * sin(tAngle) into tY
+			
+			// Start at center
+			move to point [tOriginX, tOriginY] on mProgressPath
+			
+			// Move straight up
+			line to point [tOriginX,tOriginY-tRadius] on mProgressPath
+			
+			// Now rotate
+			if mDegrees > 180 then
+				arc to point [tX,tY] with radii [tRadius,tRadius] rotated by 0 taking largest clockwise route on mProgressPath
+			else
+				arc to point [tX,tY] with radii [tRadius,tRadius] rotated by 0 taking smallest clockwise route on mProgressPath
+			end if
+		
+			// Back to center
+			line to point [tOriginX, tOriginY] on mProgressPath
+		end if
+	end handler
+	
+	
+	public handler OnParentPropertyChanged()
+		-- nothing
+	end handler
+	
+	public handler OnOpen()
+
+	end handler
+
+
+	public handler OnGeometryChanged()
+		calculatePaths()
+	end handler
+	
+	
+	-- Needed until dp-2
+	handler FormatInt(in pNumber as Number) returns String
+		variable tNumberString as String
+
+		put pNumber formatted as string into tNumberString
+
+		if "." is in tNumberString then
+			variable tDotOffset
+			put the first offset of "." in tNumberString into tDotOffset
+			delete char tDotOffset to (the number of chars in tNumberString) of tNumberString
+		end if
+
+		return tNumberString
+	end handler
+	
+	private handler colorToString(in pColor as Color, in pIncludeAlpha as Boolean) returns String
+		variable tColor as String
+	
+		put FormatInt(the rounded of ((the red of pColor) * 255)) into tColor
+		put "," & FormatInt(the rounded of ((the green of pColor) * 255)) after tColor
+		put "," & FormatInt(the rounded of ((the blue of pColor) * 255)) after tColor
+	
+		if pIncludeAlpha then
+			put "," & FormatInt(the rounded of ((the alpha of pColor) * 255)) after tColor
+		end if
+	
+		return tColor
+	end handler
+
+	----------
+	-- this handler converts a String of numbers to an RGBA color
+	private handler stringToColor(in pString as String) returns Color
+		variable tRed as Real
+		variable tGreen as Real
+		variable tBlue as Real
+		variable tAlpha as Real
+
+		variable tComponentList as List
+		split pString by "," into tComponentList
+
+		variable tComponentCount
+		put the number of elements in tComponentList into tComponentCount
+		if tComponentCount is not 3 and tComponentCount is not 4 then
+			// Invalid number of components detected
+			throw "Invalid color"
+		end if
+
+		put (element 1 of tComponentList) parsed as number into tRed
+		put (element 2 of tComponentList) parsed as number into tGreen
+		put (element 3 of tComponentList) parsed as number into tBlue
+
+		if tComponentCount is 4 then
+			put (element 4 of tComponentList) parsed as number into tAlpha
+		else
+			put 255 into tAlpha
+		end if
+
+		return color [ tRed/255, tGreen/255, tBlue/255, tAlpha/255 ]
+	end handler
+
+end widget
