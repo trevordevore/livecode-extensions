@@ -1,7 +1,5 @@
 /*
 This widget is a progress indicator shaped like a circle. This is a common iOS progress indicator.
-
-You can turn animating on or off by setting the 'animating' property to true/false.
 */
 
 /*
