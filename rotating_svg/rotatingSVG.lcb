@@ -31,6 +31,8 @@ widget community.livecode.trevordevore.rotatingSVG
 	private variable mIconSize          as Number
 	private variable mIsAnimating       as Boolean
 	private variable mIconStyle         as String
+	private variable mFinishAnimating   as Boolean
+	private variable mCurrentRotation   as Number
 
 	-- private
 	private variable mCenter            as Point
@@ -38,7 +40,7 @@ widget community.livecode.trevordevore.rotatingSVG
 	private variable mRotation          as Number
 
 	property rotateBy           get mRotateBy            set setRotateBy
-	property currentRotation    get mRotateBy            set setRotation -- we don't keep track of current rotation. Only set it.
+	property currentRotation    get mCurrentRotation     set setRotation
 	property frequency          get mFrequency           set mFrequency
 	property iconStyle          get mIconStyle           set setIconStyle
 	property iconSVGPath        get getIconPath          set setIconPath
@@ -46,6 +48,7 @@ widget community.livecode.trevordevore.rotatingSVG
 	property iconOrigin         get getIconOrigin        set setIconOrigin
 	property iconSize           get mIconSize            set setIconSize
 	property animating          get mIsAnimating         set setIsAnimating
+	property finishAnimating    get mFinishAnimating     set setFinishAnimating
 
 	metadata iconSVGPath.editor is "com.livecode.pi.text"
 	metadata iconColor.editor is "com.livecode.pi.color"
@@ -60,9 +63,14 @@ widget community.livecode.trevordevore.rotatingSVG
 		redraw all
 	end handler
 	
+	private handler setFinishAnimating(in pBoolean as Boolean)
+		put pBoolean into mFinishAnimating
+	end handler
+	
 	private handler setIsAnimating(in pBoolean as Boolean)
 		if pBoolean is not mIsAnimating then
 			put pBoolean into mIsAnimating
+			put false into mFinishAnimating
 			
 			cancel timer
 		
@@ -74,7 +82,7 @@ widget community.livecode.trevordevore.rotatingSVG
 	
 	private handler setRotation(in pRotation as Number)
 		initializationCalculations()
-		calculateRotatedPath(mWorkingPath, mRotation, mCenter)
+		calculateRotatedPath(mWorkingPath, pRotation, mCenter)
 		redraw all
 	end handler
 	
@@ -161,6 +169,7 @@ widget community.livecode.trevordevore.rotatingSVG
 		put 31 into mIconSize
 		
 		put 0 into mRotation
+		put false into mFinishAnimating
 	end handler
 
 
@@ -206,6 +215,25 @@ widget community.livecode.trevordevore.rotatingSVG
 	-- this message doesn't seem to be firing yet
 	public handler OnVisibilityChanged(in pVisible as Boolean)
 		setIsAnimating(pVisible)
+	end handler
+	
+	
+	public handler OnMouseUp()
+		if the mouse position is within my bounds then
+			post "mouseUp" to my script object with [FormatInt(the click button)] -- formatint needed until dp-2
+		else
+			post "mouseRelease" to my script object with [FormatInt(the click button)] -- formatint needed until dp-2
+		end if
+	end handler
+	
+
+	public handler OnMouseCancel()
+		post "mouseRelease" to my script object with [FormatInt(the click button)] -- formatint needed until dp-2
+	end handler
+
+
+	public handler OnMouseDown()
+		post "mouseDown" to my script object with [FormatInt(the click button)]
 	end handler
 
 
@@ -280,11 +308,21 @@ widget community.livecode.trevordevore.rotatingSVG
 	----------
 	-- this handler is called when the timer scheduled with 'schedule timer' fires
 	public handler OnTimer()
+		variable willFinishAnimatingThisRound
+		
+		put mFinishAnimating and (mRotation < 360) and ((mRotation + mRotateBy) >= 360) into willFinishAnimatingThisRound
+		if willFinishAnimatingThisRound then 
+			put false into mFinishAnimating
+		end if
+	
 		calculateRotatedPath(mWorkingPath, mRotateBy, mCenter)
+		put (mRotation + mRotateBy) mod 360 into mRotation
 		redraw all
 		
-		if mIsAnimating then
+		if mIsAnimating and not willFinishAnimatingThisRound then
 			schedule timer in mFrequency seconds -- add function to keep timer firing exactly right?
+		else
+			put false into mIsAnimating
 		end if
 	end handler
 	----------
