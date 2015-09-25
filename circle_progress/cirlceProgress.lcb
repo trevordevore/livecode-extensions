@@ -287,7 +287,7 @@ widget community.livecode.trevordevore.circleProgress
 		end if
 		
 		variable tOriginX as Number
-		variable tOriginY as number
+		variable tOriginY as Number
 		
 		put my width / 2 into tOriginX
 		put my height / 2 into tOriginY
