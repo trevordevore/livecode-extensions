@@ -1,13 +1,15 @@
 /*
 
 This widget will rotate a path around a point of origin. You can choose from one of the included Font Awesome paths 
-(circle notch, cog, pulse, spinner, or refresh) by setting the 'iconStyle' property. Or you can assign your own path to the iconSVGPath property. 
-You specify the size of the path by setting the 'iconSize' property. The path will always be centered in the middle of the widget.
+(circle notch, cog, pulse, spinner, or refresh) by setting the <iconStyle> property. Or you can assign your own path to the iconSVGPath property. 
+You specify the size of the path by setting the <iconSize> property. The path will always be centered in the middle of the widget.
 
 You can change the amount of rotation that occurs as well as the frequency of animation by setting the 
-'rotateBy' and 'frequency' properties.
+<rotateBy> and 'frequency' properties.
 
-You can turn animating on or off by setting the 'animating' property to true/false.
+You can turn animating on or off by setting the <animating> property to true/false.
+
+To turn off animating after the finishing the current animation cycle set the <finishAnimating> property to true.
 
 */
 
