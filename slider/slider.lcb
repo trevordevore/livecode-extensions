@@ -15,7 +15,7 @@ widget community.livecode.trevordevore.slider
 	use com.livecode.widget
 	use com.livecode.canvas
 	
-	metadata title is "Slider"
+	metadata title is "Slider" 
 	metadata author is "Trevor DeVore"
 	metadata version is "1.0.0"
 	
@@ -182,7 +182,7 @@ widget community.livecode.trevordevore.slider
 	
 	
 	private handler postValueChanged()
-		if mValueRange is defined then
+		if mValueRange is not nothing then
 			post "sliderValueChanged" to my script object with [getKnobValue()]
 		else
 			post "sliderValueChanged" to my script object with [getKnobPercent()]
@@ -190,8 +190,8 @@ widget community.livecode.trevordevore.slider
 	end handler
 
 	
-	private handler getValueRange() as String
-		if mValueRange is defined then
+	private handler getValueRange() returns String
+		if mValueRange is not nothing then
 			return FormatInt(element 1 of mValueRange) & "," & \
 				FormatInt(element 2 of mValueRange)
 		else
@@ -205,14 +205,14 @@ widget community.livecode.trevordevore.slider
 		split pRange by "," into tList
 		put tList parsed as list of number into tList
 		if the number of elements in tList is not 2 then
-			put undefined into mValueRange
+			put nothing into mValueRange
 		else
 			put tList into mValueRange
 		end if
 	end handler
 	
 	
-	private handler getPaint(in pType as String) as Paint
+	private handler getPaint(in pType as String) returns Paint
 		if pType is "knob" then
 			if mDrag then
 				return solid paint with mKnobHiliteColor
@@ -259,8 +259,8 @@ widget community.livecode.trevordevore.slider
 	end handler
 	
 	
-	private handler getKnobValue() as Integer
-		if mValueRange is defined then
+	private handler getKnobValue() returns Integer
+		if mValueRange is not nothing then
 			variable tPercent as Number
 			variable tLength as Number
 	
@@ -271,7 +271,7 @@ widget community.livecode.trevordevore.slider
 	end handler
 	
 	private handler setKnobValue(in pValue as Number)
-		if mValueRange is defined then
+		if mValueRange is not nothing then
 			variable tLength as Number
 			put element 2 of mValueRange - element 1 of mValueRange into tLength
 			setKnobPercent ((pValue-element 1 of mValueRange)/tLength)
@@ -279,7 +279,7 @@ widget community.livecode.trevordevore.slider
 	end handler
 	
 	
-	private handler getKnobPercent() as Number
+	private handler getKnobPercent() returns Number
 		return (mKnobX - the left of mKnobSlidingBounds) / the width of mKnobSlidingBounds
 	end handler
 	
@@ -295,7 +295,7 @@ widget community.livecode.trevordevore.slider
 	end handler
 	
 	
-	private handler getBarColor() as String
+	private handler getBarColor() returns String
 		return colorToString(mBarColor, false)
 	end handler
 	
@@ -305,7 +305,7 @@ widget community.livecode.trevordevore.slider
 	end handler
 	
 	
-	private handler getKnobColor() as String
+	private handler getKnobColor() returns String
 		return colorToString(mKnobColor, false)
 	end handler
 	
@@ -315,7 +315,7 @@ widget community.livecode.trevordevore.slider
 	end handler
 	
 	
-	private handler getKnobHiliteColor() as String
+	private handler getKnobHiliteColor() returns String
 		return colorToString(mKnobHiliteColor, false)
 	end handler
 	
@@ -325,7 +325,7 @@ widget community.livecode.trevordevore.slider
 	end handler
 	
 	
-	private handler getKnobBorderColor() as String
+	private handler getKnobBorderColor() returns String
 		return colorToString(mKnobBorderColor, false)
 	end handler
 	
@@ -335,7 +335,7 @@ widget community.livecode.trevordevore.slider
 	end handler
 	
 	
-	private handler getKnobBorderHiliteColor() as String
+	private handler getKnobBorderHiliteColor() returns String
 		return colorToString(mKnobBorderHiliteColor, false)
 	end handler
 	
@@ -351,7 +351,7 @@ widget community.livecode.trevordevore.slider
 	end handler
 	
 	
-	private handler colorToString(in pColor as Color, in pIncludeAlpha as Boolean) as String
+	private handler colorToString(in pColor as Color, in pIncludeAlpha as Boolean) returns String
 		variable tColor as String
 	
 		if pColor is undefined then
@@ -369,7 +369,7 @@ widget community.livecode.trevordevore.slider
 		return tColor
 	end handler
 
-	private handler stringToColor(in pString as String) as Color
+	private handler stringToColor(in pString as String) returns Color
 		if the number of chars in pString is 0 then
 			return ""
 			end if
@@ -402,7 +402,7 @@ widget community.livecode.trevordevore.slider
 		return color [ tRed/255, tGreen/255, tBlue/255, tAlpha ]
 	end handler
 
-	handler FormatInt(in pNumber as Number) as String
+	handler FormatInt(in pNumber as Number) returns String
 		variable tNumberString as String
 
 		put pNumber formatted as string into tNumberString
