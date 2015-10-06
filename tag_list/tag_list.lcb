@@ -1,0 +1,481 @@
+/*
+
+Draws a tag list.
+
+*/
+widget community.livecode.trevordevore.tag_list
+
+	-- dependency declarations
+	use com.livecode.canvas
+	use com.livecode.widget
+	use com.livecode.engine
+	use community.livecode.trevordevore.widgethelpers
+
+	-- adding metadata to ensure the extension displays correctly in livecode
+	metadata title is "Tag List s"
+	metadata author is "Trevor DeVore"
+	metadata version is "1.0.0"
+
+	-- properties
+	private variable mTags                   as List
+	private variable mBackgroundColor        as Color
+	private variable mBackgroundHiliteColor  as Color
+	private variable mTextColor              as Color
+	private variable mTextHiliteColor        as Color
+	private variable mTagHeight              as Number
+	private variable mTextMargin             as Number
+	private variable mTagHPadding            as Number
+	private variable mTagVPadding            as Number
+	private variable mRadius                 as Number
+	private variable mAllowDeselect          as Boolean
+	private variable mEffectiveHeight        as Number
+
+	-- private
+	private variable mCache           as Array
+	private variable mSelected        as List
+
+	property tags                     get getTags                  set setTags
+	property effectiveHeight          get mEffectiveHeight
+	property selectedTags             get getSelectedTags
+	property selectedElements         get getSelectedElements      set setSelectedElements
+	property tagColor                 get getTagColor              set setTagColor
+	property tagHiliteColor           get getTagHiliteColor        set setTagHiliteColor
+	property tagTextColor             get getTextColor             set setTextColor
+	property tagTextHiliteColor       get getTextHiliteColor       set setTextHiliteColor
+	property tagTextPadding           get mTextMargin              set setTextMargin
+	property tagHorizontalPadding     get mTagHPadding             set setHorizontalPadding
+	property tagVerticalPadding       get mTagVPadding             set setVerticalPadding
+	property tagHeight                get mTagHeight               set setTagHeight
+	property tagRadius                get mRadius                  set setTagRadius
+	property allowDeselect            get mAllowDeselect           set mAllowDeselect
+
+	metadata tagColor.group is "Colors"
+	metadata tagColor.editor is "com.livecode.pi.color"
+
+	metadata tags.editor is "com.livecode.pi.text"
+
+	metadata tagColor.editor is "com.livecode.pi.color"
+	metadata tagColor.section is "Colors"
+	metadata tagHiliteColor.editor is "com.livecode.pi.color"
+	metadata tagHiliteColor.section is "Colors"
+	metadata tagTextColor.editor is "com.livecode.pi.color"
+	metadata tagTextColor.section is "Colors"
+	metadata tagTextHiliteColor.editor is "com.livecode.pi.color"
+	metadata tagTextHiliteColor.section is "Colors"
+
+	metadata tagTextPadding.editor is "com.livecode.pi.number"
+	metadata tagHorizontalPadding.editor is "com.livecode.pi.number"
+	metadata tagVerticalPadding.editor is "com.livecode.pi.number"
+	metadata tagHeight.editor is "com.livecode.pi.number"
+	metadata tagRadius.editor is "com.livecode.pi.number"
+
+	private handler getTagColor() returns String
+		return colorToString(mBackgroundColor, false)
+	end handler
+
+	private handler setTagColor(in pColor as String)
+		put stringToColor(pColor) into mBackgroundColor
+		redraw all
+	end handler
+
+
+	private handler getTagHiliteColor() returns String
+		return colorToString(mBackgroundHiliteColor, false)
+	end handler
+
+	private handler setTagHiliteColor(in pColor as String)
+		put stringToColor(pColor) into mBackgroundHiliteColor
+		redraw all
+	end handler
+
+
+	private handler getTextColor() returns String
+		return colorToString(mTextColor, false)
+	end handler
+
+	private handler setTextColor(in pColor as String)
+		put stringToColor(pColor) into mTextColor
+		redraw all
+	end handler
+
+
+	private handler getTextHiliteColor() returns String
+		return colorToString(mTextHiliteColor, false)
+	end handler
+
+	private handler setTextHiliteColor(in pColor as String)
+		put stringToColor(pColor) into mTextHiliteColor
+		redraw all
+	end handler
+
+
+	private handler setTextMargin(in pValue as Number)
+		put pValue into mTextMargin
+		calculateTagBounds()
+		redraw all
+	end handler
+
+
+	private handler setHorizontalPadding(in pValue as Number)
+		put pValue into mTagHPadding
+		calculateTagBounds()
+		redraw all
+	end handler
+
+
+	private handler setVerticalPadding(in pValue as Number)
+		put pValue into mTagVPadding
+		calculateTagBounds()
+		redraw all
+	end handler
+
+
+	private handler setTagHeight(in pValue as Number)
+		put pValue into mTagHeight
+		calculateTagBounds()
+		redraw all
+	end handler
+
+
+	private handler setTagRadius(in pValue as Number)
+		put pValue into mRadius
+		calculateTagBounds()
+		redraw all
+	end handler
+
+
+	private handler getTags() returns String
+		variable tString
+		combine mTags with "," into tString
+		return tString
+	end handler
+
+	private handler setTags(in pTags as String) returns nothing
+		put [] into mTags
+		put [] into mSelected
+		put the empty array into mCache
+
+		split pTags by "," into mTags
+
+		calculateTagBounds()
+		redraw all
+	end handler
+
+
+	private handler getSelectedElements() returns String
+		variable tSelected
+		variable tSelectedString as String
+		variable tStringList as List
+
+		put the empty list into tStringList
+
+		repeat for each element tSelected in mSelected
+			put FormatInt(tSelected) into tSelectedString
+			push tSelectedString onto back of tStringList
+		end repeat
+
+		variable tFinalString as String
+		combine tStringList with "," into tFinalString
+		return tFinalString
+	end handler
+
+	private handler setSelectedElements(in pElements as String) returns nothing
+		variable tList as List
+		variable tNewSelected as List
+		variable tCount as Number
+		variable tElement
+		variable tNumber as Number
+
+		put the number of elements in mTags into tCount
+		put [] into tNewSelected
+
+		split pElements by "," into tList
+
+		repeat for each element tElement in tList
+			put tElement parsed as number into tNumber
+			if tNumber > 0 and tNumber <= tCount then
+				push tNumber onto tNewSelected
+			end if
+		end repeat
+
+		sort tNewSelected in ascending numeric order
+
+		if mSelected is not tNewSelected then
+			put tNewSelected into mSelected
+			redraw all
+		end if
+	end handler
+
+
+	private handler getSelectedTags() returns String
+		variable tList as List
+		variable tElement as any
+
+		put [] into tList
+
+		repeat for each element tElement in mSelected
+			push (element tElement of mTags) onto tList
+		end repeat
+
+		variable tString as String
+		combine tList with "," into tString
+		return tString
+	end handler
+
+
+	public handler OnCreate()
+		put 8 into mTextMargin
+		put 4 into mTagHPadding
+		put 6 into mTagVPadding
+		put 6 into mRadius
+		put 15 into mTagHeight
+		put 0 into mEffectiveHeight
+
+		put color [210/255,210/255,210/255] into mBackgroundColor
+		put color [51/255,51/255,51/255] into mBackgroundHiliteColor
+		put color [52/255,52/255,52/255] into mTextColor
+		put color [1,1,1] into mTextHiliteColor
+
+		put ["tag 1", "tag 2", "tag 3"] into mTags
+		put the empty array into mCache
+
+		put true into mAllowDeselect
+
+		put [] into mSelected
+	end handler
+
+
+	public handler OnLoad(in pProperties as Array)
+		put pProperties["tags"] into mTags
+		put pProperties["tagRadius"] into mRadius
+		put pProperties["verticalPadding"] into mTagVPadding
+		put pProperties["horizontalPadding"] into mTagHPadding
+		put pProperties["textPadding"] into mTextMargin
+		put pProperties["tagHeight"] into mTagHeight
+
+		put stringToColor(pProperties["backgroundColor"]) into mBackgroundColor
+		put stringToColor(pProperties["backgroundHiliteColor"]) into mBackgroundHiliteColor
+		put stringToColor(pProperties["textColor"]) into mTextColor
+		put stringToColor(pProperties["textHiliteColor"]) into mTextHiliteColor
+
+		put pProperties["allowDeselect"] into mAllowDeselect
+	end handler
+
+
+	public handler OnSave(out rProperties as Array)
+		put the empty array into rProperties
+
+		put mTags into rProperties["tags"]
+		put colorToString(mBackgroundColor, true) into rProperties["backgroundColor"]
+		put colorToString(mBackgroundHiliteColor, true) into rProperties["backgroundHiliteColor"]
+		put colorToString(mTextColor, true) into rProperties["textColor"]
+		put colorToString(mTextHiliteColor, true) into rProperties["textHiliteColor"]
+		put mTagHeight into rProperties["tagHeight"]
+		put mTextMargin into rProperties["textPadding"]
+		put mTagHPadding into rProperties["horizontalPadding"]
+		put mTagVPadding into rProperties["verticalPadding"]
+		put mRadius into rProperties["tagRadius"]
+		put mAllowDeselect into rProperties["allowDeselect"]
+	end handler
+
+
+	public handler OnOpen()
+		calculateTagBounds()
+	end handler
+
+
+	public handler OnPaint()
+		variable i as Number
+		variable tPath as Path
+		variable tColumn as Number
+		variable tHilited as Boolean
+		variable tKey as String
+
+		put 0 into tColumn
+
+		set the font of this canvas to my font
+
+		repeat with i from 1 up to the number of elements in mTags
+			add 1 to tColumn
+			put mSelected contains [i] into tHilited
+			put FormatInt(i) into tKey
+
+			if tHilited then
+				set the paint of this canvas to solid paint with AdjustColorForEnabledState(mBackgroundHiliteColor, my enabled)
+			else
+				set the paint of this canvas to solid paint with AdjustColorForEnabledState(mBackgroundColor, my enabled)
+			end if
+
+			put rounded rectangle path of mCache[tKey]["bounds"] with radius mRadius into tPath
+			fill tPath on this canvas
+
+			-- draw text
+			if tHilited then
+				set the paint of this canvas to solid paint with AdjustColorForEnabledState(mTextHiliteColor, my enabled)
+			else
+				set the paint of this canvas to solid paint with AdjustColorForEnabledState(mTextColor, my enabled)
+			end if
+
+			variable tTag as String
+			if mCache[tKey]["tag"] is nothing then
+				put element i of mTags into tTag
+			else
+				put mCache[tKey]["tag"] into tTag
+			end if
+			fill text tTag at center of the bounding box of tPath on this canvas
+		end repeat
+	end handler
+
+
+	-- When text properties change we need to update everything
+	public handler OnParentPropertyChanged()
+		put the empty array into mCache
+		calculateTagBounds()
+		redraw all
+	end handler
+
+
+	-- If resized we need to update everything
+	public handler OnGeometryChanged()
+		put the empty array into mCache
+		calculateTagBounds()
+		redraw all
+	end handler
+
+
+	public handler OnMouseDown()
+		if the click button is 1 then
+			variable tLoc as Point
+			variable tKey as String
+			variable newSelection as List
+			variable tElement as Integer
+			variable tOrigSelected as List
+
+			put the click position into tLoc
+			put [] into newSelection
+			put 0 into tElement
+
+			repeat for each key tKey in mCache
+				if tLoc is within mCache[tKey]["bounds"] then
+					put tKey parsed as number into tElement
+
+					push tElement onto newSelection
+					exit repeat
+				end if
+			end repeat
+
+			-- Only post if selection is changing
+			if newSelection is [] and not mAllowDeselect then
+				-- nothing
+			else
+				if mSelected is not newSelection then
+					-- Param 1 is new selected element number
+					-- Param 2 is previously selected element number
+					variable tOrigSelectedElement as String
+					put "" into tOrigSelectedElement
+
+					if the number of elements in mSelected > 0 then
+						put FormatInt(element 1 of mSelected) into tOrigSelectedElement
+					end if
+
+					put newSelection into mSelected
+
+					post "selectionChanged" to my script object with [FormatInt(tElement), tOrigSelectedElement] -- formatint needed until dp-2
+				end if
+
+				redraw all
+			end if
+		end if
+	end handler
+
+
+	/*
+	Caches the rendering bounds for each tag.
+	*/
+	private handler calculateTagBounds()
+		variable tBounds as Rectangle
+		variable tTopLeft as Point
+		variable i as Number
+		variable tTruncateTagLabel as Boolean
+		variable tTagIconBounds as Rectangle
+		variable tTagStringBounds as Rectangle
+		variable tColumn as Number
+		variable tFont as Font
+		variable tDiff as Number
+
+		put my bounds into tBounds
+		put point [0,0] into tTopLeft
+		put 0 into tColumn
+		put false into tTruncateTagLabel
+
+		put my font into tFont
+
+		repeat with i from 1 up to the number of elements in mTags
+			put false into tTruncateTagLabel
+			add 1 to tColumn
+
+			-- get string bounds
+			put the bounds of text (element i of mTags) with tFont into tTagStringBounds
+
+			-- now get tag bounds
+			put rectangle [the x of tTopLeft, the y of tTopLeft, \
+											the x of tTopLeft + the width of tTagStringBounds + mTextMargin*2, \
+											the y of tTopLeft + mTagHeight] into tTagIconBounds
+
+			-- Is there room for tag within widget bounds?
+			if the width of tTagIconBounds > the width of tBounds then
+				put true into tTruncateTagLabel
+
+				-- if there are multiple columns then move to next row
+				if tColumn > 1 then
+					put 0 into the x of tTopLeft
+					add mTagHeight + mTagVPadding to the y of tTopLeft
+					put 1 into tColumn
+				end if
+
+			else if the right of tTagIconBounds > the right of tBounds then
+				-- we are at the end of a row
+				put 0 into the x of tTopLeft
+				add mTagHeight + mTagVPadding to the y of tTopLeft
+				put 1 into tColumn
+			end if
+			------------------------------------
+
+			-- Adjust rects if we need to truncate.
+			if tTruncateTagLabel then
+				put the width of tTagIconBounds - the width of tBounds into tDiff
+				subtract tDiff from the width of tTagIconBounds
+				subtract tDiff from the width of tTagStringBounds
+			end if
+
+			-- Make sure rect is in right position
+			set the left of tTagIconBounds to the x of tTopLeft
+			set the top of tTagIconBounds to the y of tTopLeft
+
+			-- store in cache
+			variable tKey as String
+			put FormatInt(i) into tKey
+			put the empty array into mCache[tKey]
+			put tTagIconBounds into mCache[tKey]["bounds"]
+			--log "(%@) %@: %@" with [tTopLeft, tKey,tTagIconBounds]
+			--put the width of tTagStringBounds into mCache[tKey]["string width"]
+
+			-- If the string is truncated then store truncated version in cache.
+			-- Otherwise the key is nothing and we use the tag name from the main list.
+			if tTruncateTagLabel then
+				variable tTag as String
+				put element i of mTags into tTag
+				fitStringToRect(tTag, tFont, the width of tTagStringBounds)
+				put tTag into mCache[tKey]["tag"]
+			else
+				put nothing into mCache[tKey]["tag"]
+			end if
+
+			-- update values for next round
+			add the width of tTagIconBounds + mTagHPadding to the x of tTopLeft
+		end repeat
+
+		put the y of tTopLeft + mTagHeight into mEffectiveHeight
+	end handler
+
+end widget
