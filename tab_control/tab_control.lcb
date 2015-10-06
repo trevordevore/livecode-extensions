@@ -1,0 +1,358 @@
+/*
+
+Draws a tab control.
+
+*/
+
+widget community.livecode.trevordevore.tabControl
+
+	-- dependency declarations
+	use com.livecode.canvas
+	use com.livecode.widget
+	use com.livecode.engine
+	use community.livecode.trevordevore.widgethelpers
+
+	-- adding metadata to ensure the extension displays correctly in livecode
+	metadata title is "Tab Control"
+	metadata author is "Trevor DeVore"
+	metadata version is "1.0.0"
+
+	-- properties
+	private variable mTabs                   as List
+	private variable mBackgroundColor        as Color
+	private variable mStrokeColor            as Color
+	private variable mTextColor              as Color
+	private variable mTextHiliteColor        as Color
+	private variable mTabHeight              as Number
+	private variable mTabTextHPadding        as Number -- distance between left/right edge of text and edge of tab
+	private variable mRadius                 as Number
+
+	-- private
+	private variable mCache           as Array
+	private variable mSelected        as Number
+	private variable mStrokeWidth     as Number
+	private variable mBackgroundPath  as Path
+
+	property tabs                     get getTabs                  set setTabs
+	property selectedTab              get getSelectedTab
+	property selectedTabNumber        get getSelectedTabNumber     set setSelectedTabNumber
+	property tabBackgroundColor       get getBackgroundColor       set setBackgroundColor
+	property tabBorderColor           get getBorderColor           set setBorderColor
+	property tabTextColor             get getTextColor             set setTextColor
+	property tabTextHiliteColor       get getTextHiliteColor       set setTextHiliteColor
+	property tabTextHorizontalPadding get mTabTextHPadding         set setTabTextHorizontalPadding
+	property tabHeight                get mTabHeight               set setTabHeight
+	property cornerRadius             get mRadius                  set setCornerRadius
+
+	metadata tabs.editor is "com.livecode.pi.text"
+	metadata tags.editor is "com.livecode.pi.text"
+	metadata tabBackgroundColor.editor is "com.livecode.pi.color"
+	metadata tabBorderColor.editor is "com.livecode.pi.color"
+	metadata tabTextColor.editor is "com.livecode.pi.color"
+	metadata tabTextHiliteColor.editor is "com.livecode.pi.color"
+	metadata tabBackgroundColor.section is "Colors"
+	metadata tabBorderColor.section is "Colors"
+	metadata tabTextColor.section is "Colors"
+	metadata tabTextHiliteColor.section is "Colors"
+
+
+	private handler getBackgroundColor() returns String
+		return colorToString(mBackgroundColor, false)
+	end handler
+
+	private handler setBackgroundColor(in pColor as String)
+		put stringToColor(pColor) into mBackgroundColor
+		redraw all
+	end handler
+
+
+	private handler getBorderColor() returns String
+		return colorToString(mStrokeColor, false)
+	end handler
+
+	private handler setBorderColor(in pColor as String)
+		put stringToColor(pColor) into mStrokeColor
+		redraw all
+	end handler
+
+
+	private handler getTextColor() returns String
+		return colorToString(mTextColor, false)
+	end handler
+
+	private handler setTextColor(in pColor as String)
+		put stringToColor(pColor) into mTextColor
+		redraw all
+	end handler
+
+
+	private handler getTextHiliteColor() returns String
+		return colorToString(mTextHiliteColor, false)
+	end handler
+
+	private handler setTextHiliteColor(in pColor as String)
+		put stringToColor(pColor) into mTextHiliteColor
+		redraw all
+	end handler
+
+	private handler setTabTextHorizontalPadding(in pValue as Number)
+		put pValue into mTabTextHPadding
+		cachePaths()
+		redraw all
+	end handler
+
+
+	private handler setTabHeight(in pValue as Number)
+		put pValue into mTabHeight
+		cachePaths()
+		redraw all
+	end handler
+
+
+	private handler setCornerRadius(in pValue as Number)
+		put pValue into mRadius
+		cachePaths()
+		redraw all
+	end handler
+
+
+	private handler getTabs() returns String
+		variable tString
+		combine mTabs with newline into tString
+		return tString
+	end handler
+
+	private handler setTabs(in pTabs as String) returns nothing
+		put [] into mTabs
+		put 1 into mSelected
+		put the empty array into mCache
+
+		split pTabs by newline into mTabs
+
+		cachePaths()
+		redraw all
+	end handler
+
+
+	private handler getSelectedTabNumber() returns String
+		return FormatInt(mSelected)
+	end handler
+
+	private handler setSelectedTabNumber(in pNumber as Number) returns nothing
+		if pNumber <= the number of elements in mTabs then
+			put pNumber into mSelected
+			cachePaths()
+			redraw all
+		end if
+	end handler
+
+
+	private handler getSelectedTab() returns String
+		if mSelected <= the number of elements in mTabs then
+			return element mSelected of mTabs
+		else
+			return ""
+		end if
+	end handler
+
+
+	public handler OnCreate()
+		put 1 into mStrokeWidth
+		put 21 into mTabTextHPadding
+		put 3 into mRadius
+		put 23 into mTabHeight
+
+		put color [230/255,230/255,230/255] into mBackgroundColor
+		put color [230/255,230/255,230/255] into mStrokeColor
+		put color [100/255,100/255,100/255] into mTextColor
+		put color [53/255,53/255,53/255] into mTextHiliteColor
+
+		put ["Tab 1", "Tab 2", "Tab 3"] into mTabs
+		put the empty array into mCache
+
+		put path "" into mBackgroundPath
+
+		put 1 into mSelected
+	end handler
+
+
+	public handler OnLoad(in pProperties as Array)
+		put pProperties["tabs"] into mTabs
+		put pProperties["cornerRadius"] into mRadius
+		put pProperties["tabTextHorizontalPadding"] into mTabTextHPadding
+		put pProperties["tabHeight"] into mTabHeight
+
+		put stringToColor(pProperties["backgroundColor"]) into mBackgroundColor
+		put stringToColor(pProperties["strokeColor"]) into mStrokeColor
+		put stringToColor(pProperties["textColor"]) into mTextColor
+		put stringToColor(pProperties["textHiliteColor"]) into mTextHiliteColor
+	end handler
+
+
+	public handler OnSave(out rProperties as Array)
+		put the empty array into rProperties
+
+		put mTabs into rProperties["tabs"]
+		put colorToString(mBackgroundColor, true) into rProperties["backgroundColor"]
+		put colorToString(mStrokeColor, true) into rProperties["strokeColor"]
+		put colorToString(mTextColor, true) into rProperties["textColor"]
+		put colorToString(mTextHiliteColor, true) into rProperties["textHiliteColor"]
+		put mTabHeight into rProperties["tabHeight"]
+		put mTabTextHPadding into rProperties["tabTextHorizontalPadding"]
+		put mRadius into rProperties["cornerRadius"]
+	end handler
+
+
+	public handler OnOpen()
+		cachePaths()
+	end handler
+
+
+	public handler OnPaint()
+		variable i as Number
+		variable tPath as Path
+		variable tHilited as Boolean
+		variable tKey as String
+
+		-- Tab control outline and fill
+		set the paint of this canvas to solid paint with mBackgroundColor
+		fill mBackgroundPath on this canvas
+
+		set the paint of this canvas to solid paint with mStrokeColor
+		set the stroke width of this canvas to mStrokeWidth
+		stroke mBackgroundPath on this canvas
+
+		-- Tab names
+		set the font of this canvas to my font
+
+		repeat with i from 1 up to the number of elements in mTabs
+			put mSelected is i into tHilited
+			put FormatInt(i) into tKey
+
+			if tHilited then
+				set the paint of this canvas to solid paint with mTextHiliteColor
+			else
+				set the paint of this canvas to solid paint with mTextColor
+			end if
+
+			fill text element i of mTabs at center of mCache[tKey]["bounds"] on this canvas
+		end repeat
+	end handler
+
+
+	-- When text properties change we need to update everything
+	public handler OnParentPropertyChanged()
+		put the empty array into mCache
+		cachePaths()
+		redraw all
+	end handler
+
+
+	-- If resized we need to update everything
+	public handler OnGeometryChanged()
+		put the empty array into mCache
+		cachePaths()
+		redraw all
+	end handler
+
+
+	public handler OnMouseDown()
+		if the click button is 1 then
+			variable tLoc as Point
+			variable tKey as String
+			variable newSelection as optional Number
+
+			put the click position into tLoc
+			put nothing into newSelection
+
+			repeat for each key tKey in mCache
+				if tLoc is within mCache[tKey]["bounds"] then
+					put tKey parsed as number into newSelection
+					exit repeat
+				end if
+			end repeat
+
+			if newSelection is not nothing and newSelection is not mSelected then
+				variable oldSelection as Number
+				put 0 into oldSelection
+				put mSelected into oldSelection
+				put newSelection into mSelected
+
+				cachePaths()
+				redraw all
+				post "mouseDown" to my script object with [FormatInt(the click button)]
+				post "selectionChanged" to my script object with [FormatInt(mSelected), FormatInt(oldSelection)] -- formatint needed until dp-2
+			end if
+		end if
+	end handler
+
+
+	/*
+	Caches the rendering bounds for each tag.
+	*/
+	private handler cachePaths()
+		variable i as Number
+		variable tTopLeft as Point
+		variable tStringBounds as Rectangle
+		variable tTabBounds as Rectangle
+		variable tStrokeOffset as Number
+
+		put path "" into mBackgroundPath
+		put mStrokeWidth/2 into tStrokeOffset
+
+		-- Calculate tab dimensions
+		put point [0,0] into tTopLeft
+		repeat with i from 1 up to the number of elements in mTabs
+			-- store in cache
+			variable tKey as String
+			put FormatInt(i) into tKey
+			put the empty array into mCache[tKey]
+
+			put the bounds of text (element i of mTabs) with my font into tStringBounds
+
+			-- Store tab bounds. Use for hit testing and drawing.
+			put rectangle [the x of tTopLeft, the y of tTopLeft, \
+											the x of tTopLeft + the width of tStringBounds + mTabTextHPadding*2, \
+											the y of tTopLeft + mTabHeight] into mCache[tKey]["bounds"]
+
+			-- Add selected tab to path
+			if mSelected is i then
+				-- bottom left
+				move to point [the left of mCache[tKey]["bounds"]+tStrokeOffset, the bottom of mCache[tKey]["bounds"]-tStrokeOffset] on mBackgroundPath
+
+				-- top right - radius
+				arc through point [the left of mCache[tKey]["bounds"]+tStrokeOffset,tStrokeOffset] \
+										to point [the right of mCache[tKey]["bounds"]-mRadius-tStrokeOffset,tStrokeOffset] with radius mRadius on mBackgroundPath
+
+				-- bottom right - radius
+				arc through point [the right of mCache[tKey]["bounds"]-tStrokeOffset,tStrokeOffset] \
+										to point [the right of mCache[tKey]["bounds"]-tStrokeOffset,the bottom of mCache[tKey]["bounds"]-tStrokeOffset] with radius mRadius on mBackgroundPath
+			end if
+
+			set the x of tTopLeft to the right of mCache[tKey]["bounds"]
+		end repeat
+
+		-- Draw top-right and right
+		if the right of mCache[tKey]["bounds"] < my width then
+			arc through point [my width-tStrokeOffset, the bottom of mCache[tKey]["bounds"]-tStrokeOffset] \
+									to point [my width-tStrokeOffset, my height-tStrokeOffset-mRadius] with radius mRadius on mBackgroundPath
+		else
+			line to point [my width-tStrokeOffset, my height-tStrokeOffset-mRadius] on mBackgroundPath
+		end if
+
+		-- Bottom right and bottom
+		arc through point [my width-tStrokeOffset, my height-tStrokeOffset] \
+								to point [tStrokeOffset + mRadius, my height-tStrokeOffset] with radius mRadius on mBackgroundPath
+
+		-- Bottom left
+		arc through point [tStrokeOffset, my height-tStrokeOffset] \
+									to point [tStrokeOffset, my height-tStrokeOffset-mRadius] with radius mRadius on mBackgroundPath
+
+		if mSelected > 1 then
+			arc through point [tStrokeOffset, the bottom of mCache["1"]["bounds"]-tStrokeOffset] \
+									to point [tStrokeOffset+mRadius, the bottom of mCache["1"]["bounds"]-tStrokeOffset] with radius mRadius on mBackgroundPath
+		end if
+
+		close path on mBackgroundPath
+	end handler
+end widget
