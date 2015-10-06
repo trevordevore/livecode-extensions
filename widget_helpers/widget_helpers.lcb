@@ -1,0 +1,215 @@
+module community.livecode.trevordevore.widgethelpers
+
+   use com.livecode.canvas
+   use com.livecode.engine
+
+   metadata title is "Widget Helpers"
+   metadata author is "Trevor DeVore"
+   metadata version is "1.0.0"
+
+   public handler AdjustColorForEnabledState(in pColor as Color, in pEnabled as Boolean) returns Color
+      if pEnabled then
+   		set the alpha of pColor to 1
+   	else
+   		set the alpha of pColor to 0.5
+   	end if
+
+      return pColor
+   end handler
+
+
+   public handler colorToString(in pColor as Color, in pIncludeAlpha as Boolean) returns String
+   	variable tColor as String
+
+   	if pColor is nothing then
+   		return ""
+   	end if
+
+   	put FormatInt(the rounded of ((the red of pColor) * 255)) into tColor
+   	put "," & FormatInt(the rounded of ((the green of pColor) * 255)) after tColor
+   	put "," & FormatInt(the rounded of ((the blue of pColor) * 255)) after tColor
+
+   	if pIncludeAlpha then
+   		put "," & FormatInt(the rounded of ((the alpha of pColor) * 255)) after tColor
+   	end if
+
+   	return tColor
+   end handler
+
+   ----------
+   -- this handler converts a String of numbers to an RGBA color
+   public handler stringToColor(in pString as String) returns Color
+   	if the number of chars in pString is 0 then
+   	     return ""
+   	end if
+
+   	variable tRed as Real
+   	variable tGreen as Real
+   	variable tBlue as Real
+   	variable tAlpha as Real
+
+   	variable tComponentList as List
+   	split pString by "," into tComponentList
+
+   	variable tComponentCount
+   	put the number of elements in tComponentList into tComponentCount
+   	if tComponentCount is not 3 and tComponentCount is not 4 then
+   		// Invalid number of components detected
+   		throw "Invalid color"
+   	end if
+
+   	put (element 1 of tComponentList) parsed as number into tRed
+   	put (element 2 of tComponentList) parsed as number into tGreen
+   	put (element 3 of tComponentList) parsed as number into tBlue
+
+   	if tComponentCount is 4 then
+   		put (element 4 of tComponentList) parsed as number into tAlpha
+   	else
+   		put 1.0 into tAlpha
+   	end if
+
+   	return color [ tRed/255, tGreen/255, tBlue/255, tAlpha ]
+   end handler
+
+
+   public handler fitStringToRect(inout pString as String, in pFont as Font, in pMaxWidth as Number) returns nothing
+   	-- Now make sure that text will fit within the available width
+   	variable tTextRect as Rectangle
+   	variable tEllipsis as String
+   	variable tCharCount as Integer
+
+   	put "..." into tEllipsis
+   	put the number of chars in tEllipsis into tCharCount
+
+   	put the bounds of text pString with pFont into tTextRect
+   	if the width of tTextRect > pMaxWidth then
+   		put tEllipsis into char -tCharCount to -1 of pString
+   		put the bounds of text pString with pFont into tTextRect
+   		repeat forever
+   			if the width of tTextRect <= pMaxWidth or pString is tEllipsis then
+   				exit repeat
+   			else
+   				put "..." into char -(tCharCount+1) to -1 of pString
+   				put the bounds of text pString with pFont into tTextRect
+   			end if
+   		end repeat
+   	end if
+   end handler
+
+
+   public handler stringToPoint(in pString as String) returns Point
+   	variable tList as List
+   	variable tPoint as Point
+
+   	put point [0,0] into tPoint
+
+   	split pString by ","
+   	put the result into tList
+   	put tList parsed as list of number into tList
+   	if the number of elements in tList is 2 then
+   		put point [element 1 of tList, element 2 of tList] into tPoint
+   	end if
+
+   	return tPoint
+   end handler
+
+
+   public handler pointToString(in pPoint as Point) returns String
+   	return FormatInt(the x of pPoint) & "," & FormatInt(the y of pPoint)
+   end handler
+
+
+   public handler FormatInt(in pNumber as Number) returns String
+   	variable tNumberString as String
+
+   	put pNumber formatted as string into tNumberString
+
+   	if "." is in tNumberString then
+   		variable tDotOffset
+   		put the first offset of "." in tNumberString into tDotOffset
+   		delete char tDotOffset to (the number of chars in tNumberString) of tNumberString
+   	end if
+
+   	return tNumberString
+   end handler
+
+
+   public handler rectCenter(in pRect as Rectangle) returns Point
+   	return point [the left of pRect + the width of pRect / 2, the top of pRect + the height of pRect / 2]
+   end handler
+
+
+   public handler resizeControlWidth(in pScriptObject as ScriptObject, in pIdealWidth as Number) returns nothing
+   	variable tLeft as String
+   	get property "topleft" of pScriptObject
+   	put the result into tLeft
+
+   	variable tList
+   	split tLeft by "," into tList
+   	put element 1 of tList into tLeft
+
+     set property "width" of pScriptObject to the rounded of (pIdealWidth + 0.5)
+     set property "left" of pScriptObject to tLeft
+   end handler
+
+
+   public handler resizeControlToRect(in pScriptObject as ScriptObject, in pRect as Rectangle) returns nothing
+   	variable tTopLeft as String
+   	get property "topleft" of pScriptObject
+   	put the result into tTopLeft
+
+     set property "width" of pScriptObject to the rounded of (the width of pRect + 0.5)
+     set property "height" of pScriptObject to the rounded of (the height of pRect + 0.5)
+     set property "topleft" of pScriptObject to tTopLeft
+   end handler
+
+
+   -- Translated from some Skia code
+   public handler scaleAndMaintainAspectRatioTransform(in pSrcBounds as Rectangle, in pDestBounds as Rectangle, in pConstraintBounds as Rectangle) returns Transform
+   	// Prepare values for matrix transformation
+   	variable isLarger as Boolean
+   	variable sX as Number
+   	variable sY as Number
+
+   	put false into isLarger
+   	put the width of pDestBounds / the width of pSrcBounds into sX
+   	put the height of pDestBounds / the height of pSrcBounds into sY
+
+   	if sX > sY then
+   		put true into isLarger
+   		put sY into sX
+   	else
+   		put sX into sY
+   	end if
+
+   	variable tX as Number
+   	variable tY as Number
+
+   	put the left of pDestBounds - (the left of pSrcBounds*sX) into tX
+   	put the top of pDestBounds - (the top of pSrcBounds*sY) into tY
+
+   	variable tDiff as Number
+
+   	if isLarger then
+   		put the width of pConstraintBounds - (the width of pSrcBounds*sY) into tDiff
+   	else
+   		put the height of pConstraintBounds - (the height of pSrcBounds*sY) into tDiff
+   	end if
+
+   	// align center
+   	divide tDiff by 2
+
+   	if isLarger then
+   		add tDiff to tX
+   	else
+   		add tDiff to tY
+   	end if
+
+   	// create transformation matrix and apply
+   	variable tTransform as Transform
+   	put transform with matrix [sX, 0, 0, sY, tX, tY] into tTransform
+
+   	return tTransform
+   end handler
+
+end module
