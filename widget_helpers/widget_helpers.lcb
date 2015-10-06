@@ -1,4 +1,4 @@
-module community.livecode.trevordevore.widgethelpers
+module community.livecode.trevordevore.widgetHelpers
 
    use com.livecode.canvas
    use com.livecode.engine
