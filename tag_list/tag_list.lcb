@@ -12,7 +12,7 @@ widget community.livecode.trevordevore.tag_list
 	use community.livecode.trevordevore.widgethelpers
 
 	-- adding metadata to ensure the extension displays correctly in livecode
-	metadata title is "Tag List s"
+	metadata title is "Tag List"
 	metadata author is "Trevor DeVore"
 	metadata version is "1.0.0"
 
