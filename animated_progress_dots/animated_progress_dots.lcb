@@ -132,9 +132,9 @@ widget community.livecode.trevordevore.animatedProgressDots
 			add 1 to tCounter
 
 			if tCounter is mHilitedIndex then
-				set the paint of this canvas to solid paint with color [1,1,1]
+				set the paint of this canvas to my foreground paint
 			else
-				set the paint of this canvas to solid paint with color [34/255,108/255,178/255]
+				set the paint of this canvas to my background paint
 			end if
 			fill tPath on this canvas
 		end repeat
