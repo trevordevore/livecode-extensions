@@ -1,0 +1,156 @@
+/*
+
+This widget animates a series of dots.
+
+*/
+
+widget community.livecode.trevordevore.animatedProgressDots
+
+	use com.livecode.canvas
+	use com.livecode.widget
+	use com.livecode.engine
+	use com.livecode.math
+
+	metadata title is "Animated Progress Dots"
+	metadata author is "Trevor DeVore"
+	metadata version is "1.0.0"
+
+	-- public
+	private variable mFrequency         as Number
+	private variable mPadding           as Number
+
+	-- private
+	private variable mDotPaths          as List
+	private variable mHilitedIndex      as Integer
+	private variable mCircleCount       as Integer
+
+	property frequency          get mFrequency           set setFrequency
+	property padding            get mPadding             set setPadding
+
+	private handler setPadding(in pPadding as Number)
+		put max(pPadding, 0) into mPadding
+		redraw all
+	end handler
+
+	private handler setFrequency(in pFrequency as Number)
+		put max(0.001, pFrequency) into mFrequency
+	end handler
+
+	public handler OnCreate()
+		put 0.5 into mFrequency
+		put 10 into mPadding
+		put 0 into mCircleCount
+	end handler
+
+
+	public handler OnSave(out rProperties as Array)
+		put the empty array into rProperties
+
+		put mFrequency into rProperties["frequency"]
+		put mPadding into rProperties["padding"]
+	end handler
+
+
+	public handler OnLoad(in pProperties as Array)
+		put pProperties["frequency"] into mFrequency
+		put pProperties["padding"] into mPadding
+	end handler
+
+
+	public handler OnOpen()
+		put 1 into mHilitedIndex
+
+		initializationCalculations()
+
+		schedule timer in mFrequency seconds
+	end handler
+
+
+	public handler OnGeometryChanged()
+		initializationCalculations()
+	end handler
+
+	-- this message doesn't seem to be firing yet
+	public handler OnVisibilityChanged(in pVisible as Boolean)
+
+	end handler
+
+
+	public handler OnMouseUp()
+		if the mouse position is within my bounds then
+			post "mouseUp" to my script object with [the click button formatted as string] -- formatint needed until dp-2
+		else
+			post "mouseRelease" to my script object with [the click button formatted as string] -- formatint needed until dp-2
+		end if
+	end handler
+
+
+	public handler OnMouseCancel()
+		post "mouseRelease" to my script object with [the click button formatted as string] -- formatint needed until dp-2
+	end handler
+
+
+	public handler OnMouseDown()
+		post "mouseDown" to my script object with [the click button formatted as string]
+	end handler
+
+
+	private handler initializationCalculations() returns nothing
+		variable tPath as Path
+		variable tRadius as Number
+		variable tXOffset as Integer
+
+		put [] into mDotPaths
+		put 0 into mCircleCount
+
+		-- Create circles based off of height, padding, and width of widget
+		put my height / 2 into tRadius
+		put tRadius into tXOffset
+
+		repeat forever -- with tCounter from 1 up to 5
+			add 1 to mCircleCount
+			put circle path centered at point [tXOffset, tRadius] with radius tRadius into tPath
+			push tPath onto mDotPaths
+			add tRadius + mPadding + tRadius to tXOffset
+
+			if tXOffset + tRadius > my width then
+				exit repeat
+			end if
+		end repeat
+	end handler
+
+	----------
+	-- called whenever LiveCode needs to redraw the widget
+	public handler OnPaint()
+		variable tPath as Path
+		variable tCounter as Integer
+
+		put 0 into tCounter
+
+		repeat for each element tPath in mDotPaths
+			add 1 to tCounter
+
+			if tCounter is mHilitedIndex then
+				set the paint of this canvas to solid paint with color [1,1,1]
+			else
+				set the paint of this canvas to solid paint with color [34/255,108/255,178/255]
+			end if
+			fill tPath on this canvas
+		end repeat
+	end handler
+
+
+	public handler OnClose()
+		cancel timer
+	end handler
+
+	----------
+	-- this handler is called when the timer scheduled with 'schedule timer' fires
+	public handler OnTimer()
+		put (mHilitedIndex+1) wrap mCircleCount into mHilitedIndex
+		redraw all
+		schedule timer in mFrequency seconds -- add function to keep timer firing exactly right?
+	end handler
+	----------
+
+end widget
