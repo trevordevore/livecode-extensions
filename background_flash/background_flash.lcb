@@ -1,0 +1,185 @@
+/*
+
+This widget animates a series of dots.
+
+*/
+
+widget community.livecode.trevordevore.backgroundFlash
+
+	use com.livecode.canvas
+	use com.livecode.widget
+	use com.livecode.engine
+	use com.livecode.math
+
+	metadata title is "Background Flash"
+	metadata author is "Trevor DeVore"
+	metadata version is "1.0.0"
+
+	-- public
+	private variable mFrequency         as Number
+	private variable mPauseDuration     as Number
+	private variable mMaxOpacity        as Number
+	private variable mCornerRadius      as Integer
+	private variable mOpacityStep       as Number
+
+	-- private
+   private variable mCurrentOpacity    as Number
+	private variable mIsAnimating       as Boolean
+	private variable mPath              as Path
+	private variable mState             as String
+
+	property timerFrequency     get mFrequency           set setFrequency
+	property pauseDuration      get mPauseDuration       set mPauseDuration
+	property maxOpacity         get mMaxOpacity          set setMaxOpacity
+	property cornerRadius       get mCornerRadius        set setCornerRadius
+	property animate            get mIsAnimating         set setAnimate
+	property opacityStep        get mOpacityStep         set setOpacityStep
+
+   private handler setAnimate(in pBoolean as Boolean)
+		put pBoolean into mIsAnimating
+		cancel timer
+
+		if pBoolean then
+			put 0 into mCurrentOpacity
+			put "up" into mState
+			OnTimer()
+		end if
+	end handler
+
+	private handler setOpacityStep(in pStep as Number)
+		put max(0.01, pStep) into mOpacityStep
+		redraw all
+	end handler
+
+	private handler setMaxOpacity(in pOpacity as Number)
+		put min(max(pOpacity, 0.01), 1) into mMaxOpacity
+		redraw all
+	end handler
+
+	private handler setCornerRadius(in pRadius as Integer)
+		put max(pRadius, 0) into mCornerRadius
+		initializationCalculations()
+		redraw all
+	end handler
+
+	private handler setFrequency(in pFrequency as Number)
+		put max(0.001, pFrequency) into mFrequency
+	end handler
+
+	public handler OnCreate()
+		put false into mIsAnimating
+		put 0.025 into mFrequency
+		put 0 into mPauseDuration
+		put 0.5 into mMaxOpacity
+		put 0.05 into mOpacityStep
+		put 15 into mCornerRadius
+		put 0 into mCurrentOpacity
+		put the empty path into mPath
+		put "up" into mState
+	end handler
+
+
+	public handler OnSave(out rProperties as Array)
+		put the empty array into rProperties
+
+		put mFrequency into rProperties["frequency"]
+		put mMaxOpacity into rProperties["maxOpacity"]
+		put mCornerRadius into rProperties["cornerRadius"]
+		put mPauseDuration into rProperties["pauseDuration"]
+		put mOpacityStep into rProperties["opacityStep"]
+	end handler
+
+
+	public handler OnLoad(in pProperties as Array)
+		put pProperties["frequency"] into mFrequency
+		put pProperties["maxOpacity"] into mMaxOpacity
+		put pProperties["cornerRadius"] into mCornerRadius
+		put pProperties["pauseDuration"] into mPauseDuration
+		put pProperties["opacityStep"] into mOpacityStep
+	end handler
+
+
+	public handler OnOpen()
+		initializationCalculations()
+	end handler
+
+
+	public handler OnGeometryChanged()
+		initializationCalculations()
+	end handler
+
+	-- this message doesn't seem to be firing yet
+	public handler OnVisibilityChanged(in pVisible as Boolean)
+
+	end handler
+
+
+	public handler OnMouseUp()
+		if the mouse position is within my bounds then
+			post "mouseUp" to my script object with [the click button formatted as string] -- formatint needed until dp-2
+		else
+			post "mouseRelease" to my script object with [the click button formatted as string] -- formatint needed until dp-2
+		end if
+	end handler
+
+
+	public handler OnMouseCancel()
+		post "mouseRelease" to my script object with [the click button formatted as string] -- formatint needed until dp-2
+	end handler
+
+
+	public handler OnMouseDown()
+		post "mouseDown" to my script object with [the click button formatted as string]
+	end handler
+
+
+	private handler initializationCalculations() returns nothing
+		put rounded rectangle path of my bounds with radius mCornerRadius into mPath
+	end handler
+
+	----------
+	-- called whenever LiveCode needs to redraw the widget
+	public handler OnPaint()
+		set the paint of this canvas to solid paint with color [0,0,0] --[34/255,108/255,178/255]
+		set the opacity of this canvas to mCurrentOpacity
+		fill mPath on this canvas
+	end handler
+
+
+	public handler OnClose()
+		cancel timer
+	end handler
+
+	----------
+	-- this handler is called when the timer scheduled with 'schedule timer' fires
+	public handler OnTimer()
+		variable animationComplete as Boolean
+		variable tTimer as Number
+
+		put mFrequency into tTimer
+		put false into animationComplete
+
+		if mState is "up" then
+			put min(mCurrentOpacity + mOpacityStep, mMaxOpacity) into mCurrentOpacity
+			if mCurrentOpacity is mMaxOpacity then
+				put "pause" into mState
+			end if
+		else if mState is "pause" then
+			put mPauseDuration into tTimer
+			put "down" into mState
+		else
+			put max(mCurrentOpacity - mOpacityStep, 0) into mCurrentOpacity
+			put mCurrentOpacity is 0 into animationComplete
+		end if
+
+		redraw all
+
+		if not animationComplete then
+			schedule timer in tTimer seconds -- add function to keep timer firing exactly right?
+		else
+			post "BackgroundFlashComplete" to my script object
+		end if
+	end handler
+	----------
+
+end widget
