@@ -1,0 +1,258 @@
+/*
+
+This widget rounds corners.
+
+*/
+
+widget community.livecode.trevordevore.roundedCorners
+
+	use com.livecode.canvas
+	use com.livecode.widget
+	use com.livecode.math
+
+	metadata title is "Rounded Corners"
+	metadata author is "Trevor DeVore"
+	metadata version is "1.0.0"
+	metadata preferredSize is "150,150"
+	metadata svgicon is "M0.000000 15.000000C-0.000001 6.715731 6.715729 0.000000 15.000000 0.000000L113.000000 0.000000C121.284271 0.000000 128.000000 6.715729 128.000000 15.000000L128.000000 17.000000C128.000000 25.284271 121.284271 32.000000 113.000000 32.000000L15.000000 32.000000C6.715728 32.000000-0.000001 25.284271 0.000000 16.999998L0.000000 15.000000Z"
+
+	-- public
+	private variable mRadius            as Number
+	private variable mRoundTopLeft      as Boolean
+	private variable mRoundTopRight     as Boolean
+	private variable mRoundBottomRight  as Boolean
+	private variable mRoundBottomLeft   as Boolean
+	private variable mImagePath         as String
+	private variable mResizeQuality     as String
+	
+	-- private
+	private variable mPath              as Path
+	private variable mImage             as optional Image
+	private variable mPaint             as optional Paint
+
+	property filename                   get mImagePath          set setImagePath
+	property "radius"                   get mRadius             set setRadius
+	property roundTopLeft               get mRoundTopLeft       set setRoundTopLeft
+	property roundTopRight              get mRoundTopRight      set setRoundTopRight
+	property roundBottomRight           get mRoundBottomRight   set setRoundBottomRight
+	property roundBottomLeft            get mRoundBottomLeft    set setRoundBottomLeft
+	property formattedWidth             get getImageWidth
+	property formattedHeight            get getImageHeight
+	property resizeQuality							get getResizeQuality    set setResizeQuality
+	
+	metadata filename.editor is "com.livecode.pi.file"
+	
+	metadata resizeQuality.editor is "com.livecode.pi.enum"
+	metadata resizeQuality.options is "none,low,medium,high"
+	metadata resizeQuality.default is "medium"
+
+	private handler setRadius(in pRadius as Number)
+		put max(pRadius, 0) into mRadius
+		calculateShape()
+		redraw all
+	end handler
+	
+	private handler getResizeQuality() returns String
+		return mResizeQuality
+	end handler
+	
+	private handler setResizeQuality(in pQuality as String)			
+		if not ["none","low","medium","high"] contains [pQuality] then
+			put "medium" into pQuality
+		end if
+				
+		put pQuality into mResizeQuality
+	end handler
+	
+	private handler setImagePath(in pPath as String)
+		put pPath into mImagePath
+		loadImage()
+		redraw all
+	end handler
+	
+	private handler getImageWidth() returns Integer
+		if mImage is nothing then
+			return 0
+		else
+			return the width of mImage
+		end if
+	end handler
+	
+	private handler getImageHeight() returns Integer
+		if mImage is nothing then
+			return 0
+		else
+			return the height of mImage
+		end if
+	end handler
+	
+	private handler setRoundTopLeft(in pBoolean as Boolean)
+	  put pBoolean into mRoundTopLeft
+	  calculateShape()
+	  redraw all
+	end handler
+	
+	private handler setRoundTopRight(in pBoolean as Boolean)
+	  put pBoolean into mRoundTopRight
+	  calculateShape()
+	  redraw all
+	end handler
+	
+	private handler setRoundBottomRight(in pBoolean as Boolean)
+	  put pBoolean into mRoundBottomRight
+	  calculateShape()
+	  redraw all
+	end handler
+	
+	private handler setRoundBottomLeft(in pBoolean as Boolean)
+	  put pBoolean into mRoundBottomLeft
+	  calculateShape()
+	  redraw all
+	end handler
+
+	public handler OnCreate()
+		put 15 into mRadius
+		put the empty path into mPath
+		put "" into mImagePath
+		put true into mRoundTopLeft
+		put true into mRoundTopRight
+		put true into mRoundBottomRight
+		put true into mRoundBottomLeft
+		put "medium" into mResizeQuality
+		put nothing into mImage
+		put nothing into mPaint
+	end handler
+
+
+	public handler OnSave(out rProperties as Array)
+		put the empty array into rProperties
+
+		put mRadius into rProperties["radius"]
+		put mImagePath into rProperties["filename"]
+		put mRoundTopLeft into rProperties["roundTopLeft"]
+		put mRoundTopRight into rProperties["roundTopRight"]
+		put mRoundBottomRight into rProperties["roundBottomRight"]
+		put mRoundBottomLeft into rProperties["roundBottomLeft"]
+		put mResizeQuality into rProperties["resizeQuality"]
+	end handler
+
+
+	public handler OnLoad(in pProperties as Array)
+		put pProperties["radius"] into mRadius
+		put pProperties["filename"] into mImagePath
+		put pProperties["roundTopLeft"] into mRoundTopLeft
+		put pProperties["roundTopRight"] into mRoundTopRight
+		put pProperties["roundBottomRight"] into mRoundBottomRight
+		put pProperties["roundBottomLeft"] into mRoundBottomLeft
+		put pProperties["resizeQuality"] into mResizeQuality
+	end handler
+
+
+	public handler OnOpen()
+		calculateShape()
+		loadImage()
+	end handler
+
+
+	public handler OnGeometryChanged()
+		calculateShape()
+	end handler
+
+	public handler OnMouseUp()
+		if the mouse position is within my bounds then
+			post "mouseUp" to my script object with [the click button formatted as string] -- formatint needed until dp-2
+		else
+			post "mouseRelease" to my script object with [the click button formatted as string] -- formatint needed until dp-2
+		end if
+	end handler
+
+
+	public handler OnMouseCancel()
+		post "mouseRelease" to my script object with [the click button formatted as string] -- formatint needed until dp-2
+	end handler
+
+
+	public handler OnMouseDown()
+		post "mouseDown" to my script object with [the click button formatted as string]
+	end handler
+	
+	
+	private handler loadImage() returns nothing
+		put nothing into mImage
+		
+		if mImagePath is not empty then
+			put image from file mImagePath into mImage
+		end if
+	end handler
+	
+	
+	private handler createImagePaint() returns nothing
+		if mImage is not nothing then
+			put pattern with mImage into mPaint
+			scale mPaint by [my width/the width of mImage, my height/the height of mImage]
+		end if
+	end handler
+
+
+	private handler calculateShape() returns nothing
+		variable tRadius as Number
+		
+		put mRadius into tRadius
+		put the empty path into mPath
+		
+		// Make sure radius doesn't exceed what is allowed based on widget height
+		put min(tRadius, my height / 2) into tRadius
+		
+		// Begin a new subpath
+		if mRoundTopLeft then
+			move to point [0, tRadius] on mPath
+			arc through point [0, 0] to point [tRadius, 0] with radius tRadius on mPath
+		else
+			move to point [0, 0] on mPath
+		end if
+		
+		if mRoundTopRight then
+			arc through point [my width, 0] to point [my width, tRadius] with radius tRadius on mPath
+		else
+			line to point [my width, 0] on mPath
+		end if
+		
+		if mRoundBottomRight then
+			arc through point [my width, my height] to point [my width - tRadius, my height] with radius tRadius on mPath
+		else
+			line to point [my width, my height] on mPath
+		end if
+		
+		if mRoundBottomLeft then
+			arc through point [0, my height] to point [0, tRadius] with radius tRadius on mPath
+		else
+			line to point [0, my height] on mPath
+			line to point [0, tRadius] on mPath
+		end if
+
+		// Close the path with a line back to the starting point
+		close path on mPath
+		log the instructions of mPath
+	end handler
+
+	----------
+	-- called whenever LiveCode needs to redraw the widget
+	public handler OnPaint()
+		if mImage is not nothing then
+			set the image resize quality of this canvas to mResizeQuality
+			createImagePaint()
+		else
+			put my foreground paint into mPaint
+		end if
+		
+		set the paint of this canvas to mPaint
+		
+		fill mPath on this canvas
+	end handler
+
+
+	public handler OnClose()
+
+	end handler
+
+end widget
