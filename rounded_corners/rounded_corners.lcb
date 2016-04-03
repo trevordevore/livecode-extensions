@@ -45,6 +45,10 @@ widget community.livecode.trevordevore.roundedCorners
 	metadata resizeQuality.editor is "com.livecode.pi.enum"
 	metadata resizeQuality.options is "none,low,medium,high"
 	metadata resizeQuality.default is "medium"
+	
+	metadata backgroundColor.editor is "com.livecode.pi.color"
+	metadata backgroundColor.default is "255,0,0"
+	metadata backgroundcolor.section is "Colors"
 
 	private handler setRadius(in pRadius as Number)
 		put max(pRadius, 0) into mRadius
@@ -232,7 +236,6 @@ widget community.livecode.trevordevore.roundedCorners
 
 		// Close the path with a line back to the starting point
 		close path on mPath
-		log the instructions of mPath
 	end handler
 
 	----------
@@ -242,7 +245,7 @@ widget community.livecode.trevordevore.roundedCorners
 			set the image resize quality of this canvas to mResizeQuality
 			createImagePaint()
 		else
-			put my foreground paint into mPaint
+			put my background paint into mPaint
 		end if
 		
 		set the paint of this canvas to mPaint
