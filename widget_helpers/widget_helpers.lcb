@@ -2,6 +2,7 @@ module community.livecode.trevordevore.widgetHelpers
 
    use com.livecode.canvas
    use com.livecode.engine
+   use com.livecode.math
 
    metadata title is "Widget Helpers"
    metadata author is "Trevor DeVore"
@@ -153,15 +154,193 @@ module community.livecode.trevordevore.widgetHelpers
    end handler
 
 
-   public handler resizeControlToRect(in pScriptObject as ScriptObject, in pRect as Rectangle) returns nothing
-   	variable tTopLeft as String
-   	get property "topleft" of pScriptObject
-   	put the result into tTopLeft
+   public handler resizeControlToRect(in pScriptObject as ScriptObject, in pRect as Rectangle, in pAlignToSide as String) returns nothing
+      // We want to maintain the center left coordinate
+      variable tSide as String
+      variable tLoc as String
+      variable tFixedLoc as String
+      variable tList as List
+      variable tProp as String
 
-     set property "width" of pScriptObject to the rounded of (the width of pRect + 0.5)
-     set property "height" of pScriptObject to the rounded of (the height of pRect + 0.5)
-     set property "topleft" of pScriptObject to tTopLeft
+      -- Get current position
+      if ["top left", "bottom left", "top right", "bottom right"] contains [pAlignToSide] then
+      	put pAlignToSide into tProp
+      	replace " " with "" in tProp
+      else if ["left", "right"] contains [pAlignToSide] then
+      	put "top" & pAlignToSide into tProp
+      else if pAlignToSide is "top" then
+      	put "topleft" into tProp
+      else
+      	put "bottomleft" into tProp
+      end if
+
+      get property tProp of pScriptObject
+      put the result into tSide
+      split tSide by "," into tList
+
+      -- Set dimensions
+      set property "width" of pScriptObject to the rounded of (the width of pRect + 0.5)
+      set property "height" of pScriptObject to the rounded of (the height of pRect + 0.5)
+
+      -- Now reposition
+      if ["top left", "bottom left", "top right", "bottom right"] contains [pAlignToSide] then
+      	set property tProp of pScriptObject to element 1 of tList & "," & element 2 of tList
+      else
+
+      	if pAlignToSide is "left" or pAlignToSide is "right" then
+      		put element 1 of tList into tSide
+      	else
+      		put element 2 of tList into tSide
+      	end if
+
+      	get property "loc" of pScriptObject
+      	put the result into tLoc
+      	split tLoc by "," into tList
+
+      	if pAlignToSide is "left" or pAlignToSide is "right" then
+      		put element 2 of tList into tFixedLoc
+      	else
+      		put element 1 of tList into tFixedLoc
+      	end if
+
+      	set property pAlignToSide of pScriptObject to tSide
+
+      	-- now set y and maintain x
+      	get property "loc" of pScriptObject
+      	put the result into tLoc
+      	split tLoc by "," into tList
+      	if pAlignToSide is "left" or pAlignToSide is "right" then
+      		put element 1 of tList & "," & tFixedLoc into tLoc
+      	else
+      		put tFixedLoc & "," & element 2 of tList into tLoc
+      	end if
+
+      	-- set loc
+      	set property "loc" of pScriptObject to tLoc
+      end if
    end handler
+
+
+   /*
+   Summary: Scales and translates a path to fit within a rectangle
+
+   Parameters:
+   pTargetRect: The rectangle to fit the path within
+   xPath: The path to transform
+
+   Example:
+   use com.livecode.library.iconSVG
+
+   public handler OnPaint() returns nothing
+   	-- get the 'shopping cart' icon from the icon library
+   	variable tPathString as String
+    	put iconSVGPathFromName("shopping cart") into tPathString
+
+   	-- create the path
+   	variable tPath as Path
+   	put path tPathString into tPath
+
+   	-- scale the path to fit within the bounds of the widget
+   	constrainPathToRect(my bounds, tPath)
+
+   	-- fill the path
+   	fill tPath on this canvas
+   end handler
+
+   Description:
+   Scales and transforms <xPath> so that it fits within <pTargetRect> whilst maintaining its
+   aspect ratio.
+   */
+   public handler constrainPathToRect(in pTargetRect as Rectangle, inout xPath as Path) returns nothing
+
+      // Scale the icon
+      variable tBounds
+      put the bounding box of xPath into tBounds
+
+      // Scale appropriately
+      variable tXScale as Real
+      variable tYScale as Real
+
+      put the width of pTargetRect / the width of tBounds into tXScale
+      put the height of pTargetRect / the height of tBounds into tYScale
+
+      if tXScale > tYScale then
+         put tYScale into tXScale
+      else
+         put tXScale into tYScale
+      end if
+
+      scale xPath by [tXScale, tYScale]
+
+      variable tXTranslate as Real
+      variable tYTranslate as Real
+
+      put the bounding box of xPath into tBounds
+
+      put the left of pTargetRect - the left of tBounds into tXTranslate
+      put the top of pTargetRect - the top of tBounds into tYTranslate
+
+      variable tXDiff as Real
+      variable tYDiff as Real
+
+      put the width of pTargetRect - the width of tBounds into tXDiff
+      put the height of pTargetRect - the height of tBounds into tYDiff
+
+      // align center
+      divide tXDiff by 2
+      divide tYDiff by 2
+
+      translate xPath by [tXTranslate + tXDiff, tYTranslate + tYDiff]
+   end handler
+
+
+  public handler centerBoxWithinBox(inout xPathToCenter as Path, in pFocalPath as Path) returns nothing
+    // 0 out
+    translate xPathToCenter by [-the x of the bounding box of xPathToCenter, - the y of the bounding box of xPathToCenter]
+    // Center
+    translate xPathToCenter by [the right of the bounding box of pFocalPath - the width of the bounding box of pFocalPath/2 - the width of the bounding box of xPathToCenter/2, \
+      the bottom of the bounding box of pFocalPath - the height of the bounding box of pFocalPath/2 - the height of the bounding box of xPathToCenter/2]
+  end handler
+
+
+  -- Very useful article: http://docs.rainmeter.net/tips/transformation-matrix-guide
+  public handler calculateRotatedPath(inout pPath as Path, in pRotation as Number, in pCenter as Point, in pRotateClockwise as Boolean)
+     variable tX as Number
+     variable tY as Number
+     variable tOriginX as Number
+     variable tOriginY as Number
+     variable tMatrix as List
+     variable tA as Number
+     variable tB as Number
+     variable tC as Number
+     variable tD as Number
+
+     -- Clockwise: sin for B, -sin for C
+     -- Counterclockwise: -sin for B, sin for C
+     variable tAngle as Number
+     put (pRotation mod 360)/360*2*pi into tAngle
+
+     put cos(tAngle) into tA -- scale the x
+
+     if pRotateClockwise then
+        put sin(tAngle) into tB -- scale the y
+        put -sin(tAngle) into tC -- skew the x
+     else
+        put -sin(tAngle) into tB -- scale the y
+        put sin(tAngle) into tC -- skew the x
+     end if
+     put cos(tAngle) into tD -- skew the y
+     put the x of pCenter into tOriginX
+     put the y of pCenter into tOriginY
+
+     put tOriginX - tOriginX*tA - tOriginY*tC into tX
+     put tOriginY - tOriginX*tB - tOriginY*tD into tY
+
+     variable tTransform as Transform
+     put transform with matrix [tA,tB,tC,tD,tX,tY] into tTransform
+
+     transform pPath by tTransform
+  end handler
 
 
    -- Translated from some Skia code
