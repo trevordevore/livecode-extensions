@@ -6,7 +6,7 @@ module community.livecode.trevordevore.widgetHelpers
 
    metadata title is "Widget Helpers"
    metadata author is "Trevor DeVore"
-   metadata version is "1.0.0"
+   metadata version is "1.0.1"
 
    public handler AdjustColorForEnabledState(in pColor as Color, in pEnabled as Boolean) returns Color
       if pEnabled then
@@ -340,6 +340,27 @@ module community.livecode.trevordevore.widgetHelpers
      put transform with matrix [tA,tB,tC,tD,tX,tY] into tTransform
 
      transform pPath by tTransform
+  end handler
+
+
+  -- mIconOrigin Element 1 is percent of icon width that represents center X (e.g. 0.5). Element 2 is percent of icon height that represents center Y (e.g. 0.5).
+  -- pDestBounds Rectangle to constrain the path to.
+  -- pConstraintBounds The rect to center the path in.
+  public handler preparePathForRotation(inout xPath as Path, in pIconOrgin as List, in pDestBounds as Rectangle, in pConstraintBounds as Rectangle) returns Point
+     transform xPath by scaleAndMaintainAspectRatioTransform(the bounding box of xPath, pDestBounds, pConstraintBounds)
+     -- Reset to 0,0
+     translate xPath by [- the x of the bounding box of xPath, \
+                                   - the y of the bounding box of xPath]
+
+     -- Find center point to rotate around and center path
+     variable tCenterX as Number
+     variable tCenterY as Number
+
+     put (the width of the bounding box of xPath * element 1 of pIconOrgin) into tCenterX
+     put (the height of the bounding box of xPath * element 2 of pIconOrgin) into tCenterY
+     translate xPath by [the width of pConstraintBounds/2-tCenterX, the height of pConstraintBounds/2-tCenterY]
+     return point [(the left of the bounding box of xPath) + tCenterX, \
+                       (the top of the bounding box of xPath) + tCenterY]
   end handler
 
 
