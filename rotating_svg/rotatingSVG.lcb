@@ -242,22 +242,9 @@ widget community.livecode.trevordevore.rotatingSVG
 	private handler initializationCalculations() returns nothing
 		-- Always start with the shape at original position.
 		put mSVGPath into mWorkingPath
-	
-		-- Scale 
-		transform mWorkingPath by scaleAndMaintainAspectRatioTransform(the bounding box of mWorkingPath, rectangle [0,0,mIconSize,mIconSize])
-		-- Reset to 0,0
-		translate mWorkingPath by [- the x of the bounding box of mWorkingPath, \
-												- the y of the bounding box of mWorkingPath]
-		-- Center
-		variable tCenterX as Number
-		variable tCenterY as Number
-		
-		put (the width of the bounding box of mWorkingPath) * element 1 of mIconOrigin into tCenterX
-		put (the height of the bounding box of mWorkingPath) * element 2 of mIconOrigin into tCenterY
-		translate mWorkingPath by [my width/2-tCenterX, my height/2-tCenterY]
-		put point [(the left of the bounding box of mWorkingPath) + tCenterX, \
-								(the top of the bounding box of mWorkingPath) + tCenterY] into mCenter
-										
+
+		put preparePathForRotation(mWorkingPath, mIconOrigin, rectangle [0,0,mIconSize,mIconSize], my rectangle) into mCenter
+
 		put 0 into mRotation
 	end handler
 
@@ -267,64 +254,31 @@ widget community.livecode.trevordevore.rotatingSVG
 		set the paint of this canvas to solid paint with mColor
 		fill mWorkingPath on this canvas
 	end handler
-	
-	
+
+
 	public handler OnClose()
 		cancel timer
-	end handler
-
-
-	-- Very useful article: http://docs.rainmeter.net/tips/transformation-matrix-guide
-	private handler calculateRotatedPath(inout pPath as Path, in pRotation as Number, in pCenter as Point)
-		variable tX as Number
-		variable tY as Number
-		variable tOriginX as Number
-		variable tOriginY as Number
-		variable tMatrix as List
-		variable tA as Number
-		variable tB as Number
-		variable tC as Number
-		variable tD as Number
-	
-		-- Clockwise: sin for B, -sin for C
-		-- Counterclockwise: -sin for B, sin for C
-		variable tAngle as Number
-		put (pRotation mod 360)/360*2*pi into tAngle
-		
-		put cos(tAngle) into tA -- scale the x
-		put sin(tAngle) into tB -- scale the y
-		put -sin(tAngle) into tC -- skew the x
-		put cos(tAngle) into tD -- skew the y
-		put the x of pCenter into tOriginX
-		put the y of pCenter into tOriginY
-	
-		put tOriginX - tOriginX*tA - tOriginY*tC into tX
-		put tOriginY - tOriginX*tB - tOriginY*tD into tY	
-	
-		variable tTransform as Transform
-		put transform with matrix [tA,tB,tC,tD,tX,tY] into tTransform
-		
-		transform pPath by tTransform
 	end handler
 
 	----------
 	-- this handler is called when the timer scheduled with 'schedule timer' fires
 	public handler OnTimer()
 		variable willFinishAnimatingThisRound
-		
+
 		put mFinishAnimating and (mRotation < 360) and ((mRotation + mRotateBy) >= 360) into willFinishAnimatingThisRound
-		if willFinishAnimatingThisRound then 
+		if willFinishAnimatingThisRound then
 			put false into mFinishAnimating
 		end if
-	
-		calculateRotatedPath(mWorkingPath, mRotateBy, mCenter)
+
+		calculateRotatedPath(mWorkingPath, mRotateBy, mCenter, true)
 		put (mRotation + mRotateBy) mod 360 into mRotation
 		redraw all
-		
+
 		if mIsAnimating and not willFinishAnimatingThisRound then
 			schedule timer in mFrequency seconds -- add function to keep timer firing exactly right?
 		else
 			put false into mIsAnimating
+			post "didFinishAnimating" to my script object
 		end if
 	end handler
 	----------
