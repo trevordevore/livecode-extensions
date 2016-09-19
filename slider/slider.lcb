@@ -354,7 +354,7 @@ widget community.livecode.trevordevore.slider
 	private handler colorToString(in pColor as Color, in pIncludeAlpha as Boolean) returns String
 		variable tColor as String
 	
-		if pColor is undefined then
+		if pColor is nothing then
 			return ""
 		end if
 	
