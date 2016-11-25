@@ -305,6 +305,13 @@ module community.livecode.trevordevore.widgetHelpers
 
   -- Very useful article: http://docs.rainmeter.net/tips/transformation-matrix-guide
   public handler calculateRotatedPath(inout pPath as Path, in pRotation as Number, in pCenter as Point, in pRotateClockwise as Boolean)
+     variable tTransform as Transform
+     put rotatedPathTransformation(pRotation, pCenter, pRotateClockwise) into tTransform
+     transform pPath by tTransform
+  end handler
+
+
+  public handler rotatedPathTransformation(in pRotation as Number, in pCenter as Point, in pRotateClockwise as Boolean) returns Transform
      variable tX as Number
      variable tY as Number
      variable tOriginX as Number
@@ -339,7 +346,7 @@ module community.livecode.trevordevore.widgetHelpers
      variable tTransform as Transform
      put transform with matrix [tA,tB,tC,tD,tX,tY] into tTransform
 
-     transform pPath by tTransform
+     return tTransform
   end handler
 
 
