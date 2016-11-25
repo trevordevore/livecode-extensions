@@ -19,6 +19,7 @@ widget community.livecode.trevordevore.rotatingSVG
 	use com.livecode.widget
 	use com.livecode.engine
 	use com.livecode.math
+	use community.livecode.trevordevore.widgethelpers
 
 	metadata title is "Rotating SVG"
 	metadata author is "Trevor DeVore"
@@ -84,7 +85,7 @@ widget community.livecode.trevordevore.rotatingSVG
 	
 	private handler setRotation(in pRotation as Number)
 		initializationCalculations()
-		calculateRotatedPath(mWorkingPath, pRotation, mCenter)
+		calculateRotatedPath(mWorkingPath, pRotation, mCenter, true)
 		redraw all
 	end handler
 	
