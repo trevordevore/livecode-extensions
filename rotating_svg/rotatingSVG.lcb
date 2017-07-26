@@ -1,10 +1,10 @@
 /*
 
-This widget will rotate a path around a point of origin. You can choose from one of the included Font Awesome paths 
-(circle notch, cog, pulse, spinner, or refresh) by setting the <iconStyle> property. Or you can assign your own path to the iconSVGPath property. 
+This widget will rotate a path around a point of origin. You can choose from one of the included Font Awesome paths
+(circle notch, cog, pulse, spinner, or refresh) by setting the <iconStyle> property. Or you can assign your own path to the iconSVGPath property.
 You specify the size of the path by setting the <iconSize> property. The path will always be centered in the middle of the widget.
 
-You can change the amount of rotation that occurs as well as the frequency of animation by setting the 
+You can change the amount of rotation that occurs as well as the frequency of animation by setting the
 <rotateBy> and 'frequency' properties.
 
 You can turn animating on or off by setting the <animating> property to true/false.
@@ -62,33 +62,33 @@ widget community.livecode.trevordevore.rotatingSVG
 
 	private handler setIconSize(in pSize as Number)
 		put pSize into mIconSize
-		initializationCalculations() 
+		initializationCalculations()
 		redraw all
 	end handler
-	
+
 	private handler setFinishAnimating(in pBoolean as Boolean)
 		put pBoolean into mFinishAnimating
 	end handler
-	
+
 	private handler setIsAnimating(in pBoolean as Boolean)
 		if pBoolean is not mIsAnimating then
 			put pBoolean into mIsAnimating
 			put false into mFinishAnimating
-			
+
 			cancel timer
-		
+
 			if mIsAnimating then
 				schedule timer in mFrequency seconds -- add function to keep timer firing exactly right?
 			end if
 		end if
 	end handler
-	
+
 	private handler setRotation(in pRotation as Number)
 		initializationCalculations()
 		calculateRotatedPath(mWorkingPath, pRotation, mCenter, true)
 		redraw all
 	end handler
-	
+
 	private handler setRotateBy(in pRotateBy as Number)
 		put pRotateBy into mRotateBy
 		initializationCalculations()
@@ -105,7 +105,7 @@ widget community.livecode.trevordevore.rotatingSVG
 		initializationCalculations()
 		redraw all
 	end handler
-	
+
 	private handler getColor() returns String
 		return colorToString(mColor, false)
 	end handler
@@ -114,35 +114,35 @@ widget community.livecode.trevordevore.rotatingSVG
 		put stringToColor(pColor) into mColor
 		redraw all
 	end handler
-	
+
 	private handler getIconOrigin() returns String
 		return (element 1 of mIconOrigin) formatted as string & "," & (element 2 of mIconOrigin) formatted as string
 	end handler
 
 	private handler setIconOrigin(in pPoint as String)
 		variable tList as List
-				
+
 		split pPoint by "," into tList
 		put tList parsed as list of number into tList
 		if the number of elements in tList is 2 then
 			put tList into mIconOrigin
 			initializationCalculations()
 			redraw all
-		end if	
+		end if
 	end handler
-	
+
 	private handler setIconStyle(in pStyle as String)
 		_setIconStyle(pStyle)
 		initializationCalculations()
 		redraw all
 	end handler
-		
+
 	private handler _setIconStyle(in pStyle as String)
 		put 3 into mRotateBy
 		put 0.01 into mFrequency
 		put [0.50,0.50] into mIconOrigin
 		put pStyle into mIconStyle
-					
+
 		if pStyle is "circle notch" then
 			put path "M355.8,176.1c0,48.3-20.3,94.1-52,125.9s-77.6,52-125.9,52S83.8,333.8,52,302S0,224.4,0,176.1C0,117.4,28.6,63.7,75.1,30.8 c23.2-16.5,49-26.6,77.4-30.8v51.6C93.9,63.5,50.8,115.2,50.8,176.1c0,34.4,14.7,67.1,37.3,89.8c22.6,22.6,55.4,37.3,89.8,37.3 s67.3-14.7,90-37.3c22.6-22.6,37.1-55.4,37.1-89.8c0-61-43.1-112.6-101.7-124.5V0c57,8.1,105.6,42.9,132.4,93.7 C349.1,119.3,355.8,146.7,355.8,176.1z" into mSVGPath
 		else if pStyle is "refresh" then
@@ -152,7 +152,7 @@ widget community.livecode.trevordevore.rotatingSVG
 		else
 			put path "M297.3,76.2c0,23.7-19.3,42.9-42.9,42.9c-23.7,0-42.9-19.1-42.9-42.9c0-23.5,19.1-42.9,42.9-42.9 C278,33.3,297.3,52.6,297.3,76.2z M185.2,10.7c7.1,7.1,10.7,15.9,10.7,26c0,20.5-16.3,36.7-36.7,36.7s-36.7-16.3-36.7-36.7 S138.7,0,159.2,0C169.3,0,178.1,3.6,185.2,10.7z M311.3,154c4.8,4.8,7.1,10.7,7.1,17.4c0,13.6-10.9,24.5-24.5,24.5 c-13.6,0-24.5-10.9-24.5-24.5s10.9-24.5,24.5-24.5C300.6,146.9,306.5,149.2,311.3,154z M85.5,54.5c5.9,5.9,9,13.2,9,21.6 c0,16.8-13.8,30.6-30.6,30.6S33.3,93,33.3,76.2s13.8-30.6,30.6-30.6C72.3,45.5,79.6,48.6,85.5,54.5z M279,266.7 c0,13.2-11.3,24.5-24.5,24.5c-13.6,0-24.5-10.9-24.5-24.5c0-13.6,10.9-24.5,24.5-24.5S279,253.1,279,266.7z M41.9,154 c4.8,4.8,7.1,10.7,7.1,17.4c0,13.6-10.9,24.5-24.5,24.5S0,185,0,171.4s10.9-24.5,24.5-24.5C31.2,146.9,37.1,149.2,41.9,154z  M176.6,288.7c4.8,4.8,7.1,10.7,7.1,17.4c0,13.6-10.9,24.5-24.5,24.5s-24.5-10.9-24.5-24.5s10.9-24.5,24.5-24.5 C165.9,281.6,171.8,283.9,176.6,288.7z M81.3,249.3c4.8,4.8,7.1,10.7,7.1,17.4c0,13.6-10.9,24.5-24.5,24.5 c-13.2,0-24.5-11.3-24.5-24.5c0-13.6,10.9-24.5,24.5-24.5C70.6,242.2,76.5,244.5,81.3,249.3z" into mSVGPath
 			put [0.50,0.52] into mIconOrigin
-			
+
 			if pStyle is "spinner" then
 				put 3 into mRotateBy
 				put 0.01 into mFrequency
@@ -170,7 +170,7 @@ widget community.livecode.trevordevore.rotatingSVG
 		put [0.50,0.52] into mIconOrigin
 		put true into mIsAnimating
 		put 31 into mIconSize
-		
+
 		put 0 into mRotation
 		put false into mFinishAnimating
 	end handler
@@ -178,7 +178,7 @@ widget community.livecode.trevordevore.rotatingSVG
 
 	public handler OnSave(out rProperties as Array)
 		put the empty array into rProperties
-	
+
 		put colorToString(mColor, true) into rProperties["color"]
 		put mRotateBy into rProperties["rotateBy"]
 		put mFrequency into rProperties["frequency"]
@@ -204,8 +204,8 @@ widget community.livecode.trevordevore.rotatingSVG
 
 	public handler OnOpen()
 		initializationCalculations()
-					
-		if mIsAnimating then						
+
+		if mIsAnimating then
 			schedule timer in mFrequency seconds
 		end if
 	end handler
@@ -214,13 +214,13 @@ widget community.livecode.trevordevore.rotatingSVG
 	public handler OnGeometryChanged()
 		initializationCalculations()
 	end handler
-	
+
 	-- this message doesn't seem to be firing yet
 	public handler OnVisibilityChanged(in pVisible as Boolean)
 		setIsAnimating(pVisible)
 	end handler
-	
-	
+
+
 	public handler OnMouseUp()
 		if the mouse position is within my bounds then
 			post "mouseUp" to my script object with [FormatInt(the click button)] -- formatint needed until dp-2
@@ -228,7 +228,7 @@ widget community.livecode.trevordevore.rotatingSVG
 			post "mouseRelease" to my script object with [FormatInt(the click button)] -- formatint needed until dp-2
 		end if
 	end handler
-	
+
 
 	public handler OnMouseCancel()
 		post "mouseRelease" to my script object with [FormatInt(the click button)] -- formatint needed until dp-2
@@ -298,48 +298,48 @@ widget community.livecode.trevordevore.rotatingSVG
 		variable isLarger as Boolean
 		variable sX as Number
 		variable sY as Number
-	
+
 		put false into isLarger
 		put the width of pDestBounds / the width of pSrcBounds into sX
 		put the height of pDestBounds / the height of pSrcBounds into sY
-	
+
 		if sX > sY then
 			put true into isLarger
 			put sY into sX
 		else
 			put sX into sY
 		end if
-	
+
 		variable tX as Number
 		variable tY as Number
-	
+
 		put the left of pDestBounds - (the left of pSrcBounds*sX) into tX
 		put the top of pDestBounds - (the top of pSrcBounds*sY) into tY
-	
+
 		variable tDiff as Number
-	
+
 		if isLarger then
 			put my width - (the width of pSrcBounds*sY) into tDiff
 		else
 			put my height - (the height of pSrcBounds*sY) into tDiff
 		end if
-	
+
 		// align center
 		divide tDiff by 2
-	
+
 		if isLarger then
 			add tDiff to tX
 		else
 			add tDiff to tY
 		end if
-	
+
 		// create transformation matrix and apply
 		variable tTransform as Transform
 		put transform with matrix [sX, 0, 0, sY, tX, tY] into tTransform
-	
+
 		return tTransform
 	end handler
-	
+
 	-- Needed until dp-2
 	handler FormatInt(in pNumber as Number) returns String
 		variable tNumberString as String
@@ -354,18 +354,18 @@ widget community.livecode.trevordevore.rotatingSVG
 
 		return tNumberString
 	end handler
-	
+
 	private handler colorToString(in pColor as Color, in pIncludeAlpha as Boolean) returns String
 		variable tColor as String
-	
+
 		put FormatInt(the rounded of ((the red of pColor) * 255)) into tColor
 		put "," & FormatInt(the rounded of ((the green of pColor) * 255)) after tColor
 		put "," & FormatInt(the rounded of ((the blue of pColor) * 255)) after tColor
-	
+
 		if pIncludeAlpha then
 			put "," & FormatInt(the rounded of ((the alpha of pColor) * 255)) after tColor
 		end if
-	
+
 		return tColor
 	end handler
 
