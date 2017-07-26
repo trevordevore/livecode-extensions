@@ -240,7 +240,7 @@ widget community.livecode.trevordevore.rotatingSVG
 	end handler
 
 
-	private handler initializationCalculations() returns nothing
+	private handler initializationCalculations()
 		-- Always start with the shape at original position.
 		put mSVGPath into mWorkingPath
 
