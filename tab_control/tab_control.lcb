@@ -301,10 +301,11 @@ widget community.livecode.trevordevore.tabControl
 		put mStrokeWidth/2 into tStrokeOffset
 
 		-- Calculate tab dimensions
+		variable tKey as String
+		
 		put point [0,0] into tTopLeft
 		repeat with i from 1 up to the number of elements in mTabs
 			-- store in cache
-			variable tKey as String
 			put FormatInt(i) into tKey
 			put the empty array into mCache[tKey]
 

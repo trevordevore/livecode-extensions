@@ -44,10 +44,10 @@ module community.livecode.trevordevore.widgetHelpers
    	     return ""
    	end if
 
-   	variable tRed as Real
-   	variable tGreen as Real
-   	variable tBlue as Real
-   	variable tAlpha as Real
+   	variable tRed as Number
+   	variable tGreen as Number
+   	variable tBlue as Number
+   	variable tAlpha as Number
 
    	variable tComponentList as List
    	split pString by "," into tComponentList
@@ -64,12 +64,16 @@ module community.livecode.trevordevore.widgetHelpers
    	put (element 3 of tComponentList) parsed as number into tBlue
 
    	if tComponentCount is 4 then
-   		put (element 4 of tComponentList) parsed as number into tAlpha
+   	  if element 4 of tComponentList is "inf" then
+   	    put 255 into tAlpha
+   	  else
+        put the minimum value of [255, (element 4 of tComponentList) parsed as number] into tAlpha
+   	  end if   		
    	else
-   		put 1.0 into tAlpha
+   		put 255 into tAlpha
    	end if
 
-   	return color [ tRed/255, tGreen/255, tBlue/255, tAlpha ]
+   	return color [ tRed/255, tGreen/255, tBlue/255, tAlpha/255 ]
    end handler
 
 
@@ -305,6 +309,13 @@ module community.livecode.trevordevore.widgetHelpers
 
   -- Very useful article: http://docs.rainmeter.net/tips/transformation-matrix-guide
   public handler calculateRotatedPath(inout pPath as Path, in pRotation as Number, in pCenter as Point, in pRotateClockwise as Boolean)
+     variable tTransform as Transform
+     put rotatedPathTransformation(pRotation, pCenter, pRotateClockwise) into tTransform
+     transform pPath by tTransform
+  end handler
+
+
+  public handler rotatedPathTransformation(in pRotation as Number, in pCenter as Point, in pRotateClockwise as Boolean) returns Transform
      variable tX as Number
      variable tY as Number
      variable tOriginX as Number
@@ -339,7 +350,7 @@ module community.livecode.trevordevore.widgetHelpers
      variable tTransform as Transform
      put transform with matrix [tA,tB,tC,tD,tX,tY] into tTransform
 
-     transform pPath by tTransform
+     return tTransform
   end handler
 
 
