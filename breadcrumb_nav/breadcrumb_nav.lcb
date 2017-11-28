@@ -1,0 +1,377 @@
+/*
+
+Draws breadcrumb navigation
+
+*/
+widget community.livecode.trevordevore.breadcrumb_nav
+
+	-- dependency declarations
+	use com.livecode.canvas
+	use com.livecode.widget
+	use com.livecode.engine
+	use community.livecode.trevordevore.widgethelpers
+
+	-- adding metadata to ensure the extension displays correctly in livecode
+	metadata title is "Breadcrumb Navigation"
+	metadata author is "Trevor DeVore"
+	metadata version is "1.0.0"
+
+	-- properties
+	private variable mBreadcrumb             as List
+	private variable mBackgroundColor        as Color
+	private variable mBreadcrumbColor        as Color
+	private variable mBreadcrumbHiliteColor  as Color
+	private variable mTextColor              as Color
+	private variable mTextHiliteColor        as Color
+	private variable mTextMargin             as Number
+	private variable mHPadding               as Number
+
+	-- private
+	private variable mCache           as Array
+
+	property backdropColor			    get getBackgroundColor         set setBackgroundColor
+	property breadcrumb               get getBreadcrumb              set setBreadcrumb
+	property breadcrumbColor          get getBreadcrumbColor         set setBreadcrumbColor
+	property breadcrumbHiliteColor    get getBreadcrumbHiliteColor   set setBreadcrumbHiliteColor
+	property labelColor                get getTextColor               set setTextColor
+	property labelHiliteColor          get getTextHiliteColor         set setTextHiliteColor
+
+	metadata backdropColor.section is "Colors"
+	metadata backdropColor.editor is "com.livecode.pi.color"
+
+	metadata breadcrumb.editor is "com.livecode.pi.text"
+
+	metadata breadcrumbColor.editor is "com.livecode.pi.color"
+	metadata breadcrumbColor.section is "Colors"
+	metadata breadcrumbHiliteColor.editor is "com.livecode.pi.color"
+	metadata breadcrumbHiliteColor.section is "Colors"
+	metadata labelColor.editor is "com.livecode.pi.color"
+	metadata labelColor.section is "Colors"
+	metadata labelHiliteColor.editor is "com.livecode.pi.color"
+	metadata labelHiliteColor.section is "Colors"
+
+	private handler getBackgroundColor() returns String
+		return colorToString(mBackgroundColor, false)
+	end handler
+
+	private handler setBackgroundColor(in pColor as String)
+		put stringToColor(pColor) into mBackgroundColor
+		redraw all
+	end handler
+
+
+	private handler getBreadcrumbColor() returns String
+		return colorToString(mBreadcrumbColor, false)
+	end handler
+
+	private handler setBreadcrumbColor(in pColor as String)
+		put stringToColor(pColor) into mBreadcrumbColor
+		redraw all
+	end handler
+
+
+	private handler getBreadcrumbHiliteColor() returns String
+		return colorToString(mBreadcrumbHiliteColor, false)
+	end handler
+
+	private handler setBreadcrumbHiliteColor(in pColor as String)
+		put stringToColor(pColor) into mBreadcrumbHiliteColor
+		redraw all
+	end handler
+
+
+	private handler getTextColor() returns String
+		return colorToString(mTextColor, false)
+	end handler
+
+	private handler setTextColor(in pColor as String)
+		put stringToColor(pColor) into mTextColor
+		redraw all
+	end handler
+
+
+	private handler getTextHiliteColor() returns String
+		return colorToString(mTextHiliteColor, false)
+	end handler
+
+	private handler setTextHiliteColor(in pColor as String)
+		put stringToColor(pColor) into mTextHiliteColor
+		redraw all
+	end handler
+
+
+	private handler getBreadcrumb() returns String
+		variable tString
+		combine mBreadcrumb with "\n" into tString
+		return tString
+	end handler
+
+	private handler setBreadcrumb(in pBreadcrumb as String) returns nothing
+		put [] into mBreadcrumb
+		put the empty array into mCache
+
+		split pBreadcrumb by "\n" into mBreadcrumb
+
+		calculateBreadcrumbBounds()
+		redraw all
+	end handler
+
+
+	public handler OnCreate()
+		put 19 into mTextMargin
+		put 1 into mHPadding
+
+		put color [234/255,244/255,249/255] into mBackgroundColor
+		put color [91/255,96/255,107/255] into mBreadcrumbColor
+		put color [93/255,169/255,245/255] into mBreadcrumbHiliteColor
+		put color [255/255,255/255,255/255] into mTextColor
+		put color [255/255,255/255,255/255] into mTextHiliteColor
+
+		put ["breadcrumb 1", "breadcrumb 2", "breadcrumb 3"] into mBreadcrumb
+		put the empty array into mCache
+	end handler
+
+
+	public handler OnLoad(in pProperties as Array)
+		put pProperties["breadcrumb"] into mBreadcrumb
+
+		put stringToColor(pProperties["backgroundColor"]) into mBackgroundColor
+		put stringToColor(pProperties["breadcrumbColor"]) into mBreadcrumbColor
+		put stringToColor(pProperties["breadcrumbHiliteColor"]) into mBreadcrumbHiliteColor
+		put stringToColor(pProperties["textColor"]) into mTextColor
+		put stringToColor(pProperties["textHiliteColor"]) into mTextHiliteColor
+	end handler
+
+
+	public handler OnSave(out rProperties as Array)
+		put the empty array into rProperties
+
+		put mBreadcrumb into rProperties["breadcrumb"]
+		put colorToString(mBackgroundColor, true) into rProperties["backgroundColor"]
+		put colorToString(mBreadcrumbColor, true) into rProperties["breadcrumbColor"]
+		put colorToString(mBreadcrumbHiliteColor, true) into rProperties["breadcrumbHiliteColor"]
+		put colorToString(mTextColor, true) into rProperties["textColor"]
+		put colorToString(mTextHiliteColor, true) into rProperties["textHiliteColor"]
+	end handler
+
+
+	public handler OnOpen()
+		calculateBreadcrumbBounds()
+	end handler
+
+
+	public handler OnPaint()
+		variable i as Number
+		variable tPath as Path
+		variable tHilited as Boolean
+		variable tKey as String
+
+		set the font of this canvas to my font
+
+		set the paint of this canvas to solid paint with AdjustColorForEnabledState(mBackgroundColor, my enabled)
+		put rectangle path of my bounds into tPath
+		fill tPath on this canvas
+
+		repeat with i from 1 up to the number of elements in mBreadcrumb
+			put i is the number of elements in mBreadcrumb into tHilited
+			put FormatInt(i) into tKey
+
+			if tHilited then
+				set the paint of this canvas to solid paint with AdjustColorForEnabledState(mBreadcrumbHiliteColor, my enabled)
+			else
+				set the paint of this canvas to solid paint with AdjustColorForEnabledState(mBreadcrumbColor, my enabled)
+			end if
+
+			fill mCache[tKey]["path"] on this canvas
+
+			-- draw text
+			if tHilited then
+				set the paint of this canvas to solid paint with AdjustColorForEnabledState(mTextHiliteColor, my enabled)
+			else
+				set the paint of this canvas to solid paint with AdjustColorForEnabledState(mTextColor, my enabled)
+			end if
+
+			variable tString as String
+			if mCache[tKey]["breadcrumb"] is nothing then
+				put element i of mBreadcrumb into tString
+			else
+				put mCache[tKey]["breadcrumb"] into tString
+			end if
+			fill text tString at center of the bounding box of mCache[tKey]["path"] on this canvas
+		end repeat
+	end handler
+
+
+	-- When text properties change we need to update everything
+	public handler OnParentPropertyChanged()
+		put the empty array into mCache
+		calculateBreadcrumbBounds()
+		redraw all
+	end handler
+
+
+	-- If resized we need to update everything
+	public handler OnGeometryChanged()
+		put the empty array into mCache
+		calculateBreadcrumbBounds()
+		redraw all
+	end handler
+
+
+	public handler OnMouseDown()
+		if the click button is 1 then
+			variable tLoc as Point
+			variable i as Number
+			variable tKey as String
+			variable newSelection as List
+			variable tElement as String
+			variable tOrigSelected as List
+
+			put the click position into tLoc
+			put [] into newSelection
+
+			repeat with i from 1 up to the number of elements in mCache
+				put FormatInt(i) into tKey
+				if tLoc is within the bounding box of mCache[tKey]["path"] then
+					put tKey into tElement
+					push i onto newSelection
+					exit repeat
+				end if
+			end repeat
+
+			-- Only post if selection is changing
+			if newSelection is [] then
+				-- nothing
+			else
+				post "selectionChanged" to my script object with [tElement]
+			end if
+
+			redraw all
+		end if
+	end handler
+
+
+	/*
+	Caches the rendering bounds for each tag.
+	*/
+	private handler calculateBreadcrumbBounds()
+		variable tBounds as Rectangle
+		variable tTopLeft as Point
+		variable i as Number
+		variable tTruncateLabel as Boolean
+		variable tWidth as Number
+		variable tIconBounds as Rectangle
+		variable tStringBounds as Rectangle
+		variable tFont as Font
+		variable tDiff as Number
+		variable tMinWidth as Number
+		variable tKey as String
+		variable tDividerWidth
+
+		put 11 into tDividerWidth
+		put 80 into tMinWidth
+
+		put my bounds into tBounds
+		put point [0,0] into tTopLeft
+
+		put my font into tFont
+
+		repeat with i from 1 up to the number of elements in mBreadcrumb
+			-- get string bounds
+			put the bounds of text (element i of mBreadcrumb) with tFont into tStringBounds
+
+			-- now get bounds
+			-- TODO: Store path and perform hit detection on path. Need function for that though.
+			put rectangle [the x of tTopLeft, the y of tTopLeft, \
+											the x of tTopLeft + the width of tStringBounds + mTextMargin*2, \
+											the bottom of tBounds] into tIconBounds
+
+			add the width of tIconBounds to tWidth
+
+			-- Make sure rect is in right position
+			set the left of tIconBounds to the x of tTopLeft
+			set the top of tIconBounds to the y of tTopLeft
+			if i > 1 then
+				subtract tDividerWidth * (i-1) from the left of tIconBounds
+			end if
+
+			-- store in cache
+			put FormatInt(i) into tKey
+			put the empty array into mCache[tKey]
+			put tIconBounds into mCache[tKey]["bounds"]
+			--log "(%@) %@: %@" with [tTopLeft, tKey,tIconBounds]
+
+			-- Assume string won't be truncated
+			put nothing into mCache[tKey]["breadcrumb"]
+
+			-- update values for next round
+			add the width of tIconBounds + mHPadding to the x of tTopLeft
+		end repeat
+
+		-- Check for truncate
+		if tWidth > the width of tBounds then
+			variable tUsedWidth as Number
+			variable j as Number
+			variable tSegmentWidth as Number
+
+			put 0 into tUsedWidth
+
+			repeat with i from the number of elements in mBreadcrumb down to 1
+				put FormatInt(i) into tKey
+
+				-- Can this segment fit if all previous segments are reduced to min width?
+				if tUsedWidth + the width of mCache[tKey]["bounds"] + ((i-1)*tMinWidth) <= the width of tBounds then
+					add the width of mCache[tKey]["bounds"] to tUsedWidth
+					next repeat
+				end if
+
+				-- Needs to be truncated.
+				put the width of tBounds - tUsedWidth - ((i-1)*tMinWidth) into tSegmentWidth
+				put the width of mCache[tKey]["bounds"] - tSegmentWidth into tDiff
+				set the width of mCache[tKey]["bounds"] to tSegmentWidth
+				add the width of mCache[tKey]["bounds"] to tUsedWidth
+
+				-- Truncate string
+				variable tString as String
+				put element i of mBreadcrumb into tString
+				fitStringToRect(tString, tFont, the width of mCache[tKey]["bounds"] - mTextMargin*2)
+				put tString into mCache[tKey]["breadcrumb"]
+
+				-- reposition trailing segments
+				repeat with j from i + 1 up to the number of elements in mBreadcrumb
+					put FormatInt(j) into tKey
+					subtract tDiff from the left of mCache[tKey]["bounds"]
+				end repeat
+			end repeat
+		end if
+
+		-- Calculate paths
+		variable tRect as Rectangle
+		variable tPath as Path
+
+		repeat with i from 1 up to the number of elements in mBreadcrumb
+			put FormatInt(i) into tKey
+
+			put mCache[tKey]["bounds"] into tRect
+			put the empty path into tPath
+
+			-- if i > 1 then
+			-- 	set the left of tRect to the left of tRect - (tDividerWidth * (i-1))
+			-- end if
+
+			move to point [the left of tRect, the top of tRect] on tPath
+			line to point [the right of tRect - tDividerWidth, the top of tRect] on tPath
+			line to point [the right of tRect, the top of tRect + (the height of tRect / 2)] on tPath
+			line to point [the right of tRect - tDividerWidth, the bottom of tRect] on tPath
+			line to point [the left of tRect, the bottom of tRect] on tPath
+			if i > 1 then
+				line to point [the left of tRect + tDividerWidth, the top of tRect + (the height of tRect / 2)] on tPath
+			end if
+			close path on tPath
+
+			put tPath into mCache[tKey]["path"]
+		end repeat
+
+	end handler
+
+end widget
