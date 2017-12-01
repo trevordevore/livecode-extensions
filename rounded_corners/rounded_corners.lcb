@@ -4,7 +4,7 @@ This widget rounds corners.
 
 */
 
-widget community.livecode.trevordevore.roundedCorners
+widget community.livecode.trevordevore.roundedcorners
 
 	use com.livecode.canvas
 	use com.livecode.widget
@@ -24,7 +24,7 @@ widget community.livecode.trevordevore.roundedCorners
 	private variable mRoundBottomLeft   as Boolean
 	private variable mImagePath         as String
 	private variable mResizeQuality     as String
-	
+
 	-- private
 	private variable mPath              as Path
 	private variable mImage             as optional Image
@@ -39,13 +39,13 @@ widget community.livecode.trevordevore.roundedCorners
 	property formattedWidth             get getImageWidth
 	property formattedHeight            get getImageHeight
 	property resizeQuality							get getResizeQuality    set setResizeQuality
-	
+
 	metadata filename.editor is "com.livecode.pi.file"
-	
+
 	metadata resizeQuality.editor is "com.livecode.pi.enum"
 	metadata resizeQuality.options is "none,low,medium,high"
 	metadata resizeQuality.default is "medium"
-	
+
 	metadata backgroundColor.editor is "com.livecode.pi.color"
 	metadata backgroundColor.default is "255,0,0"
 	metadata backgroundcolor.section is "Colors"
@@ -55,25 +55,25 @@ widget community.livecode.trevordevore.roundedCorners
 		calculateShape()
 		redraw all
 	end handler
-	
+
 	private handler getResizeQuality() returns String
 		return mResizeQuality
 	end handler
-	
-	private handler setResizeQuality(in pQuality as String)			
+
+	private handler setResizeQuality(in pQuality as String)
 		if not ["none","low","medium","high"] contains [pQuality] then
 			put "medium" into pQuality
 		end if
-				
+
 		put pQuality into mResizeQuality
 	end handler
-	
+
 	private handler setImagePath(in pPath as String)
 		put pPath into mImagePath
 		loadImage()
 		redraw all
 	end handler
-	
+
 	private handler getImageWidth() returns Integer
 		if mImage is nothing then
 			return 0
@@ -81,7 +81,7 @@ widget community.livecode.trevordevore.roundedCorners
 			return the width of mImage
 		end if
 	end handler
-	
+
 	private handler getImageHeight() returns Integer
 		if mImage is nothing then
 			return 0
@@ -89,25 +89,25 @@ widget community.livecode.trevordevore.roundedCorners
 			return the height of mImage
 		end if
 	end handler
-	
+
 	private handler setRoundTopLeft(in pBoolean as Boolean)
 	  put pBoolean into mRoundTopLeft
 	  calculateShape()
 	  redraw all
 	end handler
-	
+
 	private handler setRoundTopRight(in pBoolean as Boolean)
 	  put pBoolean into mRoundTopRight
 	  calculateShape()
 	  redraw all
 	end handler
-	
+
 	private handler setRoundBottomRight(in pBoolean as Boolean)
 	  put pBoolean into mRoundBottomRight
 	  calculateShape()
 	  redraw all
 	end handler
-	
+
 	private handler setRoundBottomLeft(in pBoolean as Boolean)
 	  put pBoolean into mRoundBottomLeft
 	  calculateShape()
@@ -179,17 +179,17 @@ widget community.livecode.trevordevore.roundedCorners
 	public handler OnMouseDown()
 		post "mouseDown" to my script object with [the click button formatted as string]
 	end handler
-	
-	
+
+
 	private handler loadImage() returns nothing
 		put nothing into mImage
-		
+
 		if mImagePath is not empty then
 			put image from file mImagePath into mImage
 		end if
 	end handler
-	
-	
+
+
 	private handler createImagePaint() returns nothing
 		if mImage is not nothing then
 			put pattern with mImage into mPaint
@@ -200,13 +200,13 @@ widget community.livecode.trevordevore.roundedCorners
 
 	private handler calculateShape() returns nothing
 		variable tRadius as Number
-		
+
 		put mRadius into tRadius
 		put the empty path into mPath
-		
+
 		// Make sure radius doesn't exceed what is allowed based on widget height
 		put min(tRadius, my height / 2) into tRadius
-		
+
 		// Begin a new subpath
 		if mRoundTopLeft then
 			move to point [0, tRadius] on mPath
@@ -214,19 +214,19 @@ widget community.livecode.trevordevore.roundedCorners
 		else
 			move to point [0, 0] on mPath
 		end if
-		
+
 		if mRoundTopRight then
 			arc through point [my width, 0] to point [my width, tRadius] with radius tRadius on mPath
 		else
 			line to point [my width, 0] on mPath
 		end if
-		
+
 		if mRoundBottomRight then
 			arc through point [my width, my height] to point [my width - tRadius, my height] with radius tRadius on mPath
 		else
 			line to point [my width, my height] on mPath
 		end if
-		
+
 		if mRoundBottomLeft then
 			arc through point [0, my height] to point [0, tRadius] with radius tRadius on mPath
 		else
@@ -247,9 +247,9 @@ widget community.livecode.trevordevore.roundedCorners
 		else
 			put my background paint into mPaint
 		end if
-		
+
 		set the paint of this canvas to mPaint
-		
+
 		fill mPath on this canvas
 	end handler
 

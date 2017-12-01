@@ -2,7 +2,7 @@
 	Very simple control that displays an SVG path. You can set a hilite color but you must
 	specifically set the isHilited property to toggle the display.
 */
-widget community.livecode.trevordevore.svgIcon
+widget community.livecode.trevordevore.svgicon
 
 	use com.livecode.canvas
 	use com.livecode.widget
@@ -11,100 +11,100 @@ widget community.livecode.trevordevore.svgIcon
 	metadata title is "SVG Icon"
 	metadata author is "Trevor DeVore"
 	metadata version is "1.0.0"
-	
+
 	-- public
 	private variable mSVGPath               as Path
 	private variable mFillColor             as Color
 	private variable mFillHiliteColor       as Color
 	private variable mIsHilited             as Boolean
-	
+
 	property isHilited                      get mIsHilited                  set setIsHilited
 	property iconSVGPath                    get getSVGPath                  set setSVGPath
 	property fillColor                      get getFillColor                set setFillColor
 	property fillHiliteColor                get getFillHiliteColor          set setFillHiliteColor
-	
+
 	metadata iconSVG.editor                 is "com.livecode.pi.text"
 	metadata fillColor.editor               is "com.livecode.pi.color"
 	metadata fillHiliteColor.editor         is "com.livecode.pi.color"
 
 	metadata fillColor.section              is "Colors"
-	metadata fillHiliteColor.section        is "Colors"	
-	
+	metadata fillHiliteColor.section        is "Colors"
+
 	private handler setIsHilited(in pBoolean as Boolean)
 		put pBoolean into mIsHilited
 		redraw all
 	end handler
-	
-	
+
+
 	private handler getSVGPath() returns String
 		return the instructions of mSVGPath
 	end handler
-	
+
 	private handler setSVGPath(in pPath as String)
 		put path pPath into mSVGPath
 		calculatePaths()
 		redraw all
 	end handler
-	
-	
+
+
 	private handler getFillColor() returns String
 		return colorToString(mFillColor, false)
 	end handler
-		
+
 	private handler setFillColor(in pString as String)
 		put stringToColor(pString) into mFillColor
 		redraw all
 	end handler
-	
-	
+
+
 	private handler getFillHiliteColor() returns String
 		return colorToString(mFillHiliteColor, false)
 	end handler
-		
+
 	private handler setFillHiliteColor(in pString as String)
 		put stringToColor(pString) into mFillHiliteColor
 		redraw all
 	end handler
-	
-	
+
+
 	public handler OnCreate()
 		put false into mIsHilited
 		put color [0.4,0.4,0.4] into mFillColor
 		put color [0,0,0] into mFillHiliteColor
 		put path "M8.4,0L0,8.4L1.6,10l6.8-6.8l6.8,6.8l1.6-1.6L8.4,0z M2.4,10.5V16h4.3v-5h3.4v5h4.3v-5.5l-6-6L2.4,10.5z" into mSVGPath
 	end handler
-	
-	
+
+
 	public handler OnSave(out rProperties as Array)
 		put the empty array into rProperties
-	
+
 		put mIsHilited into rProperties["isHilited"]
 		put the instructions of mSVGPath into rProperties["iconSVGPath"]
 		put colorToString(mFillColor, true) into rProperties["fillColor"]
 		put colorToString(mFillHiliteColor, true) into rProperties["fillHiliteColor"]
 	end handler
-	
-	
+
+
 	public handler OnLoad(in pProperties as Array)
 		put pProperties["isHilited"] into mIsHilited
 		put path pProperties["iconSVGPath"] into mSVGPath
 		put stringToColor(pProperties["fillColor"]) into mFillColor
 		put stringToColor(pProperties["fillHiliteColor"]) into mFillHiliteColor
 	end handler
-	
-	
+
+
 	public handler OnOpen()
 		calculatePaths()
 	end handler
-	
-	
+
+
 	public handler OnPaint()
 		-- Set color
 		set the paint of this canvas to solid paint with getColor()
 		fill mSVGPath on this canvas
 	end handler
-	
-	
+
+
 	public handler OnMouseUp()
 		if the current mouse position is within my bounds then
 			post "mouseUp" to my script object with [FormatInt(the click button)]
@@ -119,25 +119,25 @@ widget community.livecode.trevordevore.svgIcon
 	end handler
 
 
-	public handler OnMouseDown()	
+	public handler OnMouseDown()
 		post "mouseDown" to my script object with [FormatInt(the click button)]
 	end handler
-	
-	
+
+
 	public handler OnGeometryChanged()
 		calculatePaths()
 		redraw all
 	end handler
-	
-	
+
+
 	private handler calculatePaths()
-		-- Scale 
+		-- Scale
 		transform mSVGPath by scaleAndMaintainAspectRatioTransform(the bounding box of mSVGPath, my bounds)
 		-- Reset to 0,0
 		translate mSVGPath by [- the left of the bounding box of mSVGPath, - the top of the bounding box of mSVGPath]
 	end handler
-	
-	
+
+
 	private handler getColor() returns Color
 		if mIsHilited then
 			return mFillHiliteColor
@@ -145,57 +145,57 @@ widget community.livecode.trevordevore.svgIcon
 			return mFillColor
 		end if
 	end handler
-	
-	
+
+
 	-- Translated from some Skia code
 	private handler scaleAndMaintainAspectRatioTransform(in pSrcBounds as Rectangle, in pDestBounds as Rectangle) returns Transform
 		// Prepare values for matrix transformation
 		variable isLarger as Boolean
 		variable sX as Number
 		variable sY as Number
-	
+
 		put false into isLarger
 		put the width of pDestBounds / the width of pSrcBounds into sX
 		put the height of pDestBounds / the height of pSrcBounds into sY
-	
+
 		if sX > sY then
 			put true into isLarger
 			put sY into sX
 		else
 			put sX into sY
 		end if
-	
+
 		variable tX as Number
 		variable tY as Number
-	
+
 		put the left of pDestBounds - (the left of pSrcBounds*sX) into tX
 		put the top of pDestBounds - (the top of pSrcBounds*sY) into tY
-	
+
 		variable tDiff as Number
-	
+
 		if isLarger then
 			put my width - (the width of pSrcBounds*sY) into tDiff
 		else
 			put my height - (the height of pSrcBounds*sY) into tDiff
 		end if
-	
+
 		// align center
 		divide tDiff by 2
-	
+
 		if isLarger then
 			add tDiff to tX
 		else
 			add tDiff to tY
 		end if
-	
+
 		// create transformation matrix and apply
 		variable tTransform as Transform
 		put transform with matrix [sX, 0, 0, sY, tX, tY] into tTransform
-	
+
 		return tTransform
 	end handler
-	
-	
+
+
 	handler FormatInt(in pNumber as Number) returns String
 		variable tNumberString as String
 
@@ -227,7 +227,7 @@ widget community.livecode.trevordevore.svgIcon
 
 	----------
 	-- this handler converts a String of numbers to an RGBA color
-	private handler stringToColor(in pString as String) returns Color	
+	private handler stringToColor(in pString as String) returns Color
 		variable tRed as Real
 		variable tGreen as Real
 		variable tBlue as Real
@@ -255,5 +255,5 @@ widget community.livecode.trevordevore.svgIcon
 
 		return color [ tRed/255, tGreen/255, tBlue/255, tAlpha/255 ]
 	end handler
-	
+
 end widget

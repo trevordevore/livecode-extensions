@@ -161,7 +161,7 @@ widget community.livecode.trevordevore.breadcrumb_nav
 
 
 	public handler OnPaint()
-		variable i as Number
+		variable tIndex as Number
 		variable tPath as Path
 		variable tHilited as Boolean
 		variable tKey as String
@@ -172,9 +172,9 @@ widget community.livecode.trevordevore.breadcrumb_nav
 		put rectangle path of my bounds into tPath
 		fill tPath on this canvas
 
-		repeat with i from 1 up to the number of elements in mBreadcrumb
-			put i is the number of elements in mBreadcrumb into tHilited
-			put FormatInt(i) into tKey
+		repeat with tIndex from 1 up to the number of elements in mBreadcrumb
+			put tIndex is the number of elements in mBreadcrumb into tHilited
+			put FormatInt(tIndex) into tKey
 
 			if tHilited then
 				set the paint of this canvas to solid paint with AdjustColorForEnabledState(mBreadcrumbHiliteColor, my enabled)
@@ -193,7 +193,7 @@ widget community.livecode.trevordevore.breadcrumb_nav
 
 			variable tString as String
 			if mCache[tKey]["breadcrumb"] is nothing then
-				put element i of mBreadcrumb into tString
+				put element tIndex of mBreadcrumb into tString
 			else
 				put mCache[tKey]["breadcrumb"] into tString
 			end if
@@ -221,7 +221,7 @@ widget community.livecode.trevordevore.breadcrumb_nav
 	public handler OnMouseDown()
 		if the click button is 1 then
 			variable tLoc as Point
-			variable i as Number
+			variable tIndex as Number
 			variable tKey as String
 			variable newSelection as List
 			variable tElement as String
@@ -230,11 +230,11 @@ widget community.livecode.trevordevore.breadcrumb_nav
 			put the click position into tLoc
 			put [] into newSelection
 
-			repeat with i from 1 up to the number of elements in mCache
-				put FormatInt(i) into tKey
+			repeat with tIndex from 1 up to the number of elements in mCache
+				put FormatInt(tIndex) into tKey
 				if tLoc is within the bounding box of mCache[tKey]["path"] then
 					put tKey into tElement
-					push i onto newSelection
+					push tIndex onto newSelection
 					exit repeat
 				end if
 			end repeat
@@ -257,7 +257,7 @@ widget community.livecode.trevordevore.breadcrumb_nav
 	private handler calculateBreadcrumbBounds()
 		variable tBounds as Rectangle
 		variable tTopLeft as Point
-		variable i as Number
+		variable tIndex as Number
 		variable tTruncateLabel as Boolean
 		variable tWidth as Number
 		variable tIconBounds as Rectangle
@@ -276,9 +276,9 @@ widget community.livecode.trevordevore.breadcrumb_nav
 
 		put my font into tFont
 
-		repeat with i from 1 up to the number of elements in mBreadcrumb
+		repeat with tIndex from 1 up to the number of elements in mBreadcrumb
 			-- get string bounds
-			put the bounds of text (element i of mBreadcrumb) with tFont into tStringBounds
+			put the bounds of text (element tIndex of mBreadcrumb) with tFont into tStringBounds
 
 			-- now get bounds
 			-- TODO: Store path and perform hit detection on path. Need function for that though.
@@ -291,12 +291,12 @@ widget community.livecode.trevordevore.breadcrumb_nav
 			-- Make sure rect is in right position
 			set the left of tIconBounds to the x of tTopLeft
 			set the top of tIconBounds to the y of tTopLeft
-			if i > 1 then
-				subtract tDividerWidth * (i-1) from the left of tIconBounds
+			if tIndex > 1 then
+				subtract tDividerWidth * (tIndex-1) from the left of tIconBounds
 			end if
 
 			-- store in cache
-			put FormatInt(i) into tKey
+			put FormatInt(tIndex) into tKey
 			put the empty array into mCache[tKey]
 			put tIconBounds into mCache[tKey]["bounds"]
 			--log "(%@) %@: %@" with [tTopLeft, tKey,tIconBounds]
@@ -311,35 +311,36 @@ widget community.livecode.trevordevore.breadcrumb_nav
 		-- Check for truncate
 		if tWidth > the width of tBounds then
 			variable tUsedWidth as Number
-			variable j as Number
 			variable tSegmentWidth as Number
 
 			put 0 into tUsedWidth
 
-			repeat with i from the number of elements in mBreadcrumb down to 1
-				put FormatInt(i) into tKey
+			repeat with tIndex from the number of elements in mBreadcrumb down to 1
+				put FormatInt(tIndex) into tKey
 
 				-- Can this segment fit if all previous segments are reduced to min width?
-				if tUsedWidth + the width of mCache[tKey]["bounds"] + ((i-1)*tMinWidth) <= the width of tBounds then
+				if tUsedWidth + the width of mCache[tKey]["bounds"] + ((tIndex-1)*tMinWidth) <= the width of tBounds then
 					add the width of mCache[tKey]["bounds"] to tUsedWidth
 					next repeat
 				end if
 
 				-- Needs to be truncated.
-				put the width of tBounds - tUsedWidth - ((i-1)*tMinWidth) into tSegmentWidth
+				put the width of tBounds - tUsedWidth - ((tIndex-1)*tMinWidth) into tSegmentWidth
 				put the width of mCache[tKey]["bounds"] - tSegmentWidth into tDiff
 				set the width of mCache[tKey]["bounds"] to tSegmentWidth
 				add the width of mCache[tKey]["bounds"] to tUsedWidth
 
 				-- Truncate string
 				variable tString as String
-				put element i of mBreadcrumb into tString
+				put element tIndex of mBreadcrumb into tString
 				fitStringToRect(tString, tFont, the width of mCache[tKey]["bounds"] - mTextMargin*2)
 				put tString into mCache[tKey]["breadcrumb"]
 
 				-- reposition trailing segments
-				repeat with j from i + 1 up to the number of elements in mBreadcrumb
-					put FormatInt(j) into tKey
+				variable tIndex2
+
+				repeat with tIndex2 from tIndex + 1 up to the number of elements in mBreadcrumb
+					put FormatInt(tIndex2) into tKey
 					subtract tDiff from the left of mCache[tKey]["bounds"]
 				end repeat
 			end repeat
@@ -349,22 +350,18 @@ widget community.livecode.trevordevore.breadcrumb_nav
 		variable tRect as Rectangle
 		variable tPath as Path
 
-		repeat with i from 1 up to the number of elements in mBreadcrumb
-			put FormatInt(i) into tKey
+		repeat with tIndex from 1 up to the number of elements in mBreadcrumb
+			put FormatInt(tIndex) into tKey
 
 			put mCache[tKey]["bounds"] into tRect
 			put the empty path into tPath
-
-			-- if i > 1 then
-			-- 	set the left of tRect to the left of tRect - (tDividerWidth * (i-1))
-			-- end if
 
 			move to point [the left of tRect, the top of tRect] on tPath
 			line to point [the right of tRect - tDividerWidth, the top of tRect] on tPath
 			line to point [the right of tRect, the top of tRect + (the height of tRect / 2)] on tPath
 			line to point [the right of tRect - tDividerWidth, the bottom of tRect] on tPath
 			line to point [the left of tRect, the bottom of tRect] on tPath
-			if i > 1 then
+			if tIndex > 1 then
 				line to point [the left of tRect + tDividerWidth, the top of tRect + (the height of tRect / 2)] on tPath
 			end if
 			close path on tPath

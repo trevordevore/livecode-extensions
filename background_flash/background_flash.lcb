@@ -4,7 +4,7 @@ This widget animates a series of dots.
 
 */
 
-widget community.livecode.trevordevore.backgroundFlash
+widget community.livecode.trevordevore.backgroundflash
 
 	use com.livecode.canvas
 	use com.livecode.widget

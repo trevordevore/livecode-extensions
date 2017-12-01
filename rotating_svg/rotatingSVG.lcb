@@ -13,13 +13,13 @@ To turn off animating after the finishing the current animation cycle set the <f
 
 */
 
-widget community.livecode.trevordevore.rotatingSVG
+widget community.livecode.trevordevore.rotatingsvg
 
 	use com.livecode.canvas
 	use com.livecode.widget
 	use com.livecode.engine
 	use com.livecode.math
-	use community.livecode.trevordevore.widgethelpers
+	use community.livecode.trevordevore.widgetHelpers
 
 	metadata title is "Rotating SVG"
 	metadata author is "Trevor DeVore"

@@ -1,9 +1,9 @@
-widget community.livecode.trevordevore.treeToggleButton
+widget community.livecode.trevordevore.treetogglebutton
 
 	use com.livecode.canvas
 	use com.livecode.widget
 	use com.livecode.engine
-	use community.livecode.trevordevore.widgetHelpers
+	use community.livecode.trevordevore.widgethelpers
 
 	metadata title is "Tree Toggle Button"
 	metadata author is "Trevor DeVore"

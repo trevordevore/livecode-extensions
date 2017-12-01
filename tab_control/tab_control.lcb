@@ -4,7 +4,7 @@ Draws a tab control.
 
 */
 
-widget community.livecode.trevordevore.tabControl
+widget community.livecode.trevordevore.tabcontrol
 
 	-- dependency declarations
 	use com.livecode.canvas
@@ -209,7 +209,7 @@ widget community.livecode.trevordevore.tabControl
 
 
 	public handler OnPaint()
-		variable i as Number
+		variable tIndex as Number
 		variable tPath as Path
 		variable tHilited as Boolean
 		variable tKey as String
@@ -225,9 +225,9 @@ widget community.livecode.trevordevore.tabControl
 		-- Tab names
 		set the font of this canvas to my font
 
-		repeat with i from 1 up to the number of elements in mTabs
-			put mSelected is i into tHilited
-			put FormatInt(i) into tKey
+		repeat with tIndex from 1 up to the number of elements in mTabs
+			put mSelected is tIndex into tHilited
+			put FormatInt(tIndex) into tKey
 
 			if tHilited then
 				set the paint of this canvas to solid paint with mTextHiliteColor
@@ -235,7 +235,7 @@ widget community.livecode.trevordevore.tabControl
 				set the paint of this canvas to solid paint with mTextColor
 			end if
 
-			fill text element i of mTabs at center of mCache[tKey]["bounds"] on this canvas
+			fill text element tIndex of mTabs at center of mCache[tKey]["bounds"] on this canvas
 		end repeat
 	end handler
 
@@ -291,7 +291,7 @@ widget community.livecode.trevordevore.tabControl
 	Caches the rendering bounds for each tag.
 	*/
 	private handler cachePaths()
-		variable i as Number
+		variable tIndex as Number
 		variable tTopLeft as Point
 		variable tStringBounds as Rectangle
 		variable tTabBounds as Rectangle
@@ -302,14 +302,14 @@ widget community.livecode.trevordevore.tabControl
 
 		-- Calculate tab dimensions
 		variable tKey as String
-		
+
 		put point [0,0] into tTopLeft
-		repeat with i from 1 up to the number of elements in mTabs
+		repeat with tIndex from 1 up to the number of elements in mTabs
 			-- store in cache
-			put FormatInt(i) into tKey
+			put FormatInt(tIndex) into tKey
 			put the empty array into mCache[tKey]
 
-			put the bounds of text (element i of mTabs) with my font into tStringBounds
+			put the bounds of text (element tIndex of mTabs) with my font into tStringBounds
 
 			-- Store tab bounds. Use for hit testing and drawing.
 			put rectangle [the x of tTopLeft, the y of tTopLeft, \
@@ -317,7 +317,7 @@ widget community.livecode.trevordevore.tabControl
 											the y of tTopLeft + mTabHeight] into mCache[tKey]["bounds"]
 
 			-- Add selected tab to path
-			if mSelected is i then
+			if mSelected is tIndex then
 				-- bottom left
 				move to point [the left of mCache[tKey]["bounds"]+tStrokeOffset, the bottom of mCache[tKey]["bounds"]-tStrokeOffset] on mBackgroundPath
 

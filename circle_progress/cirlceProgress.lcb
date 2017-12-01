@@ -11,7 +11,7 @@ Syntax:
 set the percent of <widget> to <pPercent>
 get the percent of <widget>
 
-Summary: Sets the percent of the circle that are filled. 
+Summary: Sets the percent of the circle that are filled.
 
 Parameters:
 pPercent(number): A value between 0 and 1.
@@ -125,7 +125,7 @@ Description:
 Set the color of the border to match the design of your application.
 
 */
-widget community.livecode.trevordevore.circleProgress
+widget community.livecode.trevordevore.circleprogress
 
 	use com.livecode.engine
 	use com.livecode.widget
@@ -134,37 +134,37 @@ widget community.livecode.trevordevore.circleProgress
 
 	metadata title is "Circle Progress"
 	metadata author is "Trevor DeVore"
-	metadata version is "1.0.0"
-	
+	metadata version is "1.0.1"
+
 	-- public
 	private variable mDegrees               as Number
 	private variable mEmptyFillColor        as optional Color
 	private variable mProgressFillColor     as Color
 	private variable mBorderColor           as optional Color
 	private variable mStrokeWidth           as Number
-	
-	-- private 
+
+	-- private
 	private variable mRotateCircleBy        as Number
 	private variable mProgressPath          as optional Path
 	private variable mStrokePath            as optional Path
-	
+
 	property degrees          get mDegrees           set setDegrees
 	property percent          get getPercent         set setPercent
 	property progressColor    get getProgressColor   set setProgressColor
 	property backColor        get getBackColor       set setBackColor
 	property borderSize       get mStrokeWidth       set setBorderSize
 	property borderColor      get getBorderColor     set setBorderColor
-	
+
 	metadata progressColor.editor is "com.livecode.pi.color"
 	metadata backColor.editor is "com.livecode.pi.color"
 	metadata borderColor.editor is "com.livecode.pi.color"
-	
+
 	metadata progressColor.section is "Colors"
 	metadata backColor.section is "Colors"
 	metadata borderColor.section is "Colors"
 	metadata degrees.user_visible is "false"
-	
-	
+
+
 	public handler setDegrees(in pValue as Number)
 		if pValue < 360 then
 			put pValue mod 360 into mDegrees
@@ -174,11 +174,11 @@ widget community.livecode.trevordevore.circleProgress
 		calculatePaths()
 		redraw all
 	end handler
-	
+
 	public handler getPercent() returns Number
 		return mDegrees/360
 	end handler
-	
+
 	public handler setPercent(in pPercent as Number)
 		if pPercent >=0 and pPercent <= 1 then
 			put 360 * pPercent into mDegrees
@@ -186,16 +186,16 @@ widget community.livecode.trevordevore.circleProgress
 			redraw all
 		end if
 	end handler
-	
+
 	public handler getProgressColor() returns String
 		return colorToString(mProgressFillColor, false)
 	end handler
-	
+
 	public handler setProgressColor(in pColor as String)
 		put stringToColor(pColor) into mProgressFillColor
 		redraw all
 	end handler
-	
+
 	public handler getBackColor() returns String
 		if mEmptyFillColor is nothing then
 			return ""
@@ -203,7 +203,7 @@ widget community.livecode.trevordevore.circleProgress
 			return colorToString(mEmptyFillColor, false)
 		end if
 	end handler
-	
+
 	public handler setBackColor(in pColor as String)
 		if pColor is empty then
 			put nothing into mEmptyFillColor
@@ -212,13 +212,13 @@ widget community.livecode.trevordevore.circleProgress
 		end if
 		redraw all
 	end handler
-	
+
 	public handler setBorderSize(in pSize as Number)
 		put pSize into mStrokeWidth
 		calculatePaths()
 		redraw all
 	end handler
-	
+
 	public handler getBorderColor() returns String
 		if mBorderColor is nothing then
 			return ""
@@ -226,7 +226,7 @@ widget community.livecode.trevordevore.circleProgress
 			return colorToString(mBorderColor, false)
 		end if
 	end handler
-	
+
 	public handler setBorderColor(in pColor as String)
 		if pColor is empty then
 			put nothing into mBorderColor
@@ -235,11 +235,11 @@ widget community.livecode.trevordevore.circleProgress
 		end if
 		redraw all
 	end handler
-	
-	
+
+
 	public handler OnCreate()
 		put -90 into mRotateCircleBy -- 0 starts at EAST. Subtract 90 so it points NORTH.
-		
+
 		put 3 into mStrokeWidth
 		put 0 into mDegrees
 		put color [1,1,1] into mEmptyFillColor
@@ -247,7 +247,7 @@ widget community.livecode.trevordevore.circleProgress
 		put color [0.81,0.84,0.92] into mBorderColor
 		calculatePaths()
 	end handler
-	
+
 
 	public handler OnPaint()
 		if mStrokePath is not nothing then
@@ -255,43 +255,43 @@ widget community.livecode.trevordevore.circleProgress
 				set the paint of this canvas to solid paint with mEmptyFillColor
 				fill mStrokePath on this canvas
 			end if
-			
+
 			if mStrokeWidth > 0 then
 				set the stroke width of this canvas to mStrokeWidth
 				set the paint of this canvas to solid paint with mBorderColor
-				stroke mStrokePath on this canvas 
+				stroke mStrokePath on this canvas
 			end if
 		end if
-		
+
 		if mProgressPath is not nothing then
 			set the paint of this canvas to solid paint with mProgressFillColor
 			fill mProgressPath on this canvas
 		end if
 	end handler
-	
-	
+
+
 	private handler calculatePaths()
 		variable tRadius as Number
-		
+
 		put nothing into mStrokePath
-		
+
 		if my width > my height then
 			put my height/2 into tRadius
 		else
 			put my width/2 into tRadius
 		end if
-		
+
 		// Stroke and fill
-		if mStrokeWidth > 0 or mEmptyFillColor is not nothing then		
+		if mStrokeWidth > 0 or mEmptyFillColor is not nothing then
 			put circle path centered at point [my width/2, my height/2] with radius (tRadius-mStrokeWidth/2) into mStrokePath
 		end if
-		
+
 		variable tOriginX as Number
 		variable tOriginY as Number
-		
+
 		put my width / 2 into tOriginX
 		put my height / 2 into tOriginY
-		
+
 		// Progress
 		if mDegrees is 0 then
 			-- nothing
@@ -302,36 +302,36 @@ widget community.livecode.trevordevore.circleProgress
 			variable tAngle as Number
 			variable tX as Number
 			variable tY as Number
-			
+
 			put the empty path into mProgressPath
-			
+
 			put (mDegrees+mRotateCircleBy)*(pi/180) into tAngle
 			put tOriginX + tRadius * cos(tAngle) into tX
 			put tOriginY + tRadius * sin(tAngle) into tY
-			
+
 			// Start at center
 			move to point [tOriginX, tOriginY] on mProgressPath
-			
+
 			// Move straight up
 			line to point [tOriginX,tOriginY-tRadius] on mProgressPath
-			
+
 			// Now rotate
 			if mDegrees > 180 then
 				arc to point [tX,tY] with radii [tRadius,tRadius] rotated by 0 taking largest clockwise route on mProgressPath
 			else
 				arc to point [tX,tY] with radii [tRadius,tRadius] rotated by 0 taking smallest clockwise route on mProgressPath
 			end if
-		
+
 			// Back to center
 			line to point [tOriginX, tOriginY] on mProgressPath
 		end if
 	end handler
-	
-	
+
+
 	public handler OnParentPropertyChanged()
 		-- nothing
 	end handler
-	
+
 	public handler OnOpen()
 
 	end handler
@@ -340,8 +340,8 @@ widget community.livecode.trevordevore.circleProgress
 	public handler OnGeometryChanged()
 		calculatePaths()
 	end handler
-	
-	
+
+
 	-- Needed until dp-2
 	handler FormatInt(in pNumber as Number) returns String
 		variable tNumberString as String
@@ -356,18 +356,18 @@ widget community.livecode.trevordevore.circleProgress
 
 		return tNumberString
 	end handler
-	
+
 	private handler colorToString(in pColor as Color, in pIncludeAlpha as Boolean) returns String
 		variable tColor as String
-	
+
 		put FormatInt(the rounded of ((the red of pColor) * 255)) into tColor
 		put "," & FormatInt(the rounded of ((the green of pColor) * 255)) after tColor
 		put "," & FormatInt(the rounded of ((the blue of pColor) * 255)) after tColor
-	
+
 		if pIncludeAlpha then
 			put "," & FormatInt(the rounded of ((the alpha of pColor) * 255)) after tColor
 		end if
-	
+
 		return tColor
 	end handler
 

@@ -285,7 +285,7 @@ widget community.livecode.trevordevore.tag_list
 
 
 	public handler OnPaint()
-		variable i as Number
+		variable tIndex as Number
 		variable tPath as Path
 		variable tColumn as Number
 		variable tHilited as Boolean
@@ -295,10 +295,10 @@ widget community.livecode.trevordevore.tag_list
 
 		set the font of this canvas to my font
 
-		repeat with i from 1 up to the number of elements in mTags
+		repeat with tIndex from 1 up to the number of elements in mTags
 			add 1 to tColumn
-			put mSelected contains [i] into tHilited
-			put FormatInt(i) into tKey
+			put mSelected contains [tIndex] into tHilited
+			put FormatInt(tIndex) into tKey
 
 			if tHilited then
 				set the paint of this canvas to solid paint with AdjustColorForEnabledState(mBackgroundHiliteColor, my enabled)
@@ -318,7 +318,7 @@ widget community.livecode.trevordevore.tag_list
 
 			variable tTag as String
 			if mCache[tKey]["tag"] is nothing then
-				put element i of mTags into tTag
+				put element tIndex of mTags into tTag
 			else
 				put mCache[tKey]["tag"] into tTag
 			end if
@@ -395,7 +395,7 @@ widget community.livecode.trevordevore.tag_list
 	private handler calculateTagBounds()
 		variable tBounds as Rectangle
 		variable tTopLeft as Point
-		variable i as Number
+		variable tIndex as Number
 		variable tTruncateTagLabel as Boolean
 		variable tTagIconBounds as Rectangle
 		variable tTagStringBounds as Rectangle
@@ -410,12 +410,12 @@ widget community.livecode.trevordevore.tag_list
 
 		put my font into tFont
 
-		repeat with i from 1 up to the number of elements in mTags
+		repeat with tIndex from 1 up to the number of elements in mTags
 			put false into tTruncateTagLabel
 			add 1 to tColumn
 
 			-- get string bounds
-			put the bounds of text (element i of mTags) with tFont into tTagStringBounds
+			put the bounds of text (element tIndex of mTags) with tFont into tTagStringBounds
 
 			-- now get tag bounds
 			put rectangle [the x of tTopLeft, the y of tTopLeft, \
@@ -454,7 +454,7 @@ widget community.livecode.trevordevore.tag_list
 
 			-- store in cache
 			variable tKey as String
-			put FormatInt(i) into tKey
+			put FormatInt(tIndex) into tKey
 			put the empty array into mCache[tKey]
 			put tTagIconBounds into mCache[tKey]["bounds"]
 			--log "(%@) %@: %@" with [tTopLeft, tKey,tTagIconBounds]
@@ -464,7 +464,7 @@ widget community.livecode.trevordevore.tag_list
 			-- Otherwise the key is nothing and we use the tag name from the main list.
 			if tTruncateTagLabel then
 				variable tTag as String
-				put element i of mTags into tTag
+				put element tIndex of mTags into tTag
 				fitStringToRect(tTag, tFont, the width of tTagStringBounds)
 				put tTag into mCache[tKey]["tag"]
 			else

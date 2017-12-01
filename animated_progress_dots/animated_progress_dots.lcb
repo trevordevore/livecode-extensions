@@ -4,7 +4,7 @@ This widget animates a series of dots.
 
 */
 
-widget community.livecode.trevordevore.animatedProgressDots
+widget community.livecode.trevordevore.animatedprogressdots
 
 	use com.livecode.canvas
 	use com.livecode.widget
