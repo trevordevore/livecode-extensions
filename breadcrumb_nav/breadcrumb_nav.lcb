@@ -25,6 +25,7 @@ widget community.livecode.trevordevore.breadcrumb_nav
 	private variable mTextHiliteColor        as Color
 	private variable mTextMargin             as Number
 	private variable mHPadding               as Number
+	private variable mBorderColor		        as Color
 
 	-- private
 	private variable mCache           as Array
@@ -35,6 +36,7 @@ widget community.livecode.trevordevore.breadcrumb_nav
 	property breadcrumbHiliteColor    get getBreadcrumbHiliteColor   set setBreadcrumbHiliteColor
 	property labelColor                get getTextColor               set setTextColor
 	property labelHiliteColor          get getTextHiliteColor         set setTextHiliteColor
+	property outlineColor              get getBorderColor             set setBorderColor
 
 	metadata backdropColor.section is "Colors"
 	metadata backdropColor.editor is "com.livecode.pi.color"
@@ -49,6 +51,8 @@ widget community.livecode.trevordevore.breadcrumb_nav
 	metadata labelColor.section is "Colors"
 	metadata labelHiliteColor.editor is "com.livecode.pi.color"
 	metadata labelHiliteColor.section is "Colors"
+	metadata borderColor.editor is "com.livecode.pi.color"
+	metadata borderColor.section is "Colors"
 
 	private handler getBackgroundColor() returns String
 		return colorToString(mBackgroundColor, false)
@@ -59,6 +63,14 @@ widget community.livecode.trevordevore.breadcrumb_nav
 		redraw all
 	end handler
 
+	private handler getBorderColor() returns String
+		return colorToString(mBorderColor, false)
+	end handler
+
+	private handler setBorderColor(in pColor as String)
+		put stringToColor(pColor) into mBorderColor
+		redraw all
+	end handler
 
 	private handler getBreadcrumbColor() returns String
 		return colorToString(mBreadcrumbColor, false)
@@ -126,6 +138,7 @@ widget community.livecode.trevordevore.breadcrumb_nav
 		put color [93/255,169/255,245/255] into mBreadcrumbHiliteColor
 		put color [255/255,255/255,255/255] into mTextColor
 		put color [255/255,255/255,255/255] into mTextHiliteColor
+		put color [192/255,194/255,196/255] into mBorderColor
 
 		put ["breadcrumb 1", "breadcrumb 2", "breadcrumb 3"] into mBreadcrumb
 		put the empty array into mCache
@@ -152,6 +165,7 @@ widget community.livecode.trevordevore.breadcrumb_nav
 		put colorToString(mBreadcrumbHiliteColor, true) into rProperties["breadcrumbHiliteColor"]
 		put colorToString(mTextColor, true) into rProperties["textColor"]
 		put colorToString(mTextHiliteColor, true) into rProperties["textHiliteColor"]
+		put colorToString(mBorderColor, true) into rProperties["borderColor"]
 	end handler
 
 
@@ -165,6 +179,7 @@ widget community.livecode.trevordevore.breadcrumb_nav
 		variable tPath as Path
 		variable tHilited as Boolean
 		variable tKey as String
+		variable tRectangle as Rectangle
 
 		set the font of this canvas to my font
 
@@ -197,8 +212,14 @@ widget community.livecode.trevordevore.breadcrumb_nav
 			else
 				put mCache[tKey]["breadcrumb"] into tString
 			end if
-			fill text tString at center of the bounding box of mCache[tKey]["path"] on this canvas
+			put the bounding box of mCache[tKey]["path"] into tRectangle
+			set the left of tRectangle to the left of tRectangle + mTextMargin
+			fill text tString at left of tRectangle on this canvas
 		end repeat
+
+		set the paint of this canvas to solid paint with AdjustColorForEnabledState(mBorderColor, my enabled)
+		set the stroke width of this canvas to 1
+		stroke tPath on this canvas
 	end handler
 
 
